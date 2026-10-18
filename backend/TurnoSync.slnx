@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TurnoSync.Api/TurnoSync.Api.csproj" />
+    <Project Path="src/TurnoSync.Application/TurnoSync.Application.csproj" />
+    <Project Path="src/TurnoSync.Domain/TurnoSync.Domain.csproj" />
+    <Project Path="src/TurnoSync.Infra/TurnoSync.Infra.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TurnoSync.Tests/TurnoSync.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.2.0" />
+    <!-- Necessario so para IServiceCollection no ApplicationServicesRegistration -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TurnoSync.Domain\TurnoSync.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

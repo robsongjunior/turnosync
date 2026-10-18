@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.21" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TurnoSync.Api\TurnoSync.Api.csproj" />
+    <ProjectReference Include="..\..\src\TurnoSync.Application\TurnoSync.Application.csproj" />
+    <ProjectReference Include="..\..\src\TurnoSync.Domain\TurnoSync.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TurnoSync.Infra\TurnoSync.Infra.csproj" />
+  </ItemGroup>
+
+</Project>
