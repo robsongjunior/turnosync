@@ -1,0 +1,49 @@
+<section class="panel" aria-label="Import result">
+  <div class="panel-header">
+    <h2>Import result</h2>
+    <button type="button" (click)="closed.emit()">Close</button>
+  </div>
+
+  <p>
+    <strong>{{ report().imported.length }}</strong> imported,
+    <strong>{{ report().failed.length }}</strong> failed.
+  </p>
+
+  @if (report().failed.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>Row</th>
+          <th>Email</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of report().failed; track row.row) {
+          <tr>
+            <td>{{ row.row }}</td>
+            <td>{{ row.email ?? '—' }}</td>
+            <td>
+              <ul class="reasons">
+                @for (reason of row.reasons; track reason) {
+                  <li>{{ reason }}</li>
+                }
+              </ul>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (report().imported.length > 0) {
+    <details>
+      <summary>Imported rows ({{ report().imported.length }})</summary>
+      <p class="hint">
+        @for (row of report().imported; track row.row) {
+          <span class="chip">{{ row.row }} · {{ row.email }}</span>
+        }
+      </p>
+    </details>
+  }
+</section>

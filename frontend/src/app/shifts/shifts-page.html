@@ -1,0 +1,82 @@
+<header class="topbar">
+  <h1>TurnoSync</h1>
+</header>
+
+<main>
+  @if (error(); as message) {
+    <p class="banner banner-error" role="alert">
+      <span>{{ message }}</span>
+      <button type="button" class="link" (click)="error.set(null)">Dismiss</button>
+    </p>
+  }
+
+  <div class="toolbar">
+    <button type="button" class="primary" (click)="newShift()">+ New shift</button>
+    <button type="button" (click)="fileInput.click()" [disabled]="busy()">Import</button>
+    <input #fileInput type="file" accept=".xlsx" hidden (change)="onFileSelected($event)" />
+
+    <span class="spacer"></span>
+
+    <label class="inline">
+      From
+      <input type="date" [value]="exportFrom()" (input)="setExportFrom($event)" />
+    </label>
+    <label class="inline">
+      To
+      <input type="date" [value]="exportTo()" (input)="setExportTo($event)" />
+    </label>
+    <button type="button" (click)="export()" [disabled]="!canExport()">Export</button>
+  </div>
+
+  @if (!holidaysAvailable()) {
+    <p class="banner banner-warn" role="status">⚠ Holidays unavailable for some shifts.</p>
+  }
+
+  @if (formOpen()) {
+    <app-shift-form
+      [shift]="editing()"
+      [collaborators]="collaborators()"
+      (saved)="onSaved()"
+      (cancelled)="closeForm()"
+    />
+  }
+
+  @if (importReport(); as report) {
+    <app-import-report [report]="report" (closed)="importReport.set(null)" />
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Collaborator</th>
+        <th>Date</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Holiday</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (shift of shifts(); track shift.id) {
+        <tr>
+          <td>{{ shift.collaboratorName }}</td>
+          <td>{{ shift.date }}</td>
+          <td>{{ shift.startTime }}</td>
+          <td>{{ shift.endTime }}</td>
+          <td>
+            @if (shift.isHoliday === true) {
+              <span class="badge">Yes</span>
+            } @else if (shift.isHoliday === null) {
+              <span class="unknown" title="Unknown: the holiday service is unavailable">?</span>
+            }
+          </td>
+          <td><button type="button" (click)="edit(shift)">Edit</button></td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty">{{ loading() ? 'Loading…' : 'No shifts yet.' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</main>

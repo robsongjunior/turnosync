@@ -1,0 +1,68 @@
+<form class="panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <h2>{{ shift() ? 'Edit shift' : 'New shift' }}</h2>
+
+  @if (formError(); as message) {
+    <p class="banner banner-error" role="alert">{{ message }}</p>
+  }
+
+  <div class="form-grid">
+    <label>
+      Collaborator
+      <select formControlName="collaboratorId">
+        <option [ngValue]="0" disabled>Select a collaborator</option>
+        @for (collaborator of collaborators(); track collaborator.id) {
+          <option [ngValue]="collaborator.id">{{ collaborator.name }} ({{ collaborator.countryCode }})</option>
+        }
+      </select>
+      @if (showError('collaboratorId')) {
+        <span class="field-error">Required</span>
+      }
+      @for (message of serverErrorsOf('collaboratorId'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+
+    <label>
+      Date
+      <input type="date" formControlName="date" />
+      @if (showError('date')) {
+        <span class="field-error">Required</span>
+      }
+      @for (message of serverErrorsOf('date'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+
+    <label>
+      Start
+      <input type="time" formControlName="startTime" />
+      @if (showError('startTime')) {
+        <span class="field-error">Required</span>
+      }
+      @for (message of serverErrorsOf('startTime'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+
+    <label>
+      End
+      <input type="time" formControlName="endTime" />
+      @if (showError('endTime')) {
+        <span class="field-error">Required</span>
+      }
+      @if (form.hasError('sameTime') && form.controls.endTime.touched) {
+        <span class="field-error">End must differ from start</span>
+      }
+      @for (message of serverErrorsOf('endTime'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+  </div>
+
+  <p class="hint">An end time earlier than the start time means the shift ends the next day.</p>
+
+  <div class="actions">
+    <button type="submit" class="primary" [disabled]="submitting()">{{ submitting() ? 'Saving…' : 'Save' }}</button>
+    <button type="button" (click)="cancelled.emit()" [disabled]="submitting()">Cancel</button>
+  </div>
+</form>
