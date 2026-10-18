@@ -1,21 +1,21 @@
-<section class="panel" aria-label="Import result">
+<section class="panel" aria-label="Resultado de la importación">
   <div class="panel-header">
-    <h2>Import result</h2>
-    <button type="button" (click)="closed.emit()">Close</button>
+    <h2>Resultado de la importación</h2>
+    <button type="button" (click)="closed.emit()">Cerrar</button>
   </div>
 
   <p>
-    <strong>{{ report().imported.length }}</strong> imported,
-    <strong>{{ report().failed.length }}</strong> failed.
+    Filas importadas: <strong>{{ report().imported.length }}</strong> ·
+    Filas con error: <strong>{{ report().failed.length }}</strong>
   </p>
 
   @if (report().failed.length > 0) {
     <table>
       <thead>
         <tr>
-          <th>Row</th>
+          <th>Fila</th>
           <th>Email</th>
-          <th>Reason</th>
+          <th>Motivo</th>
         </tr>
       </thead>
       <tbody>
@@ -38,7 +38,7 @@
 
   @if (report().imported.length > 0) {
     <details>
-      <summary>Imported rows ({{ report().imported.length }})</summary>
+      <summary>Filas importadas ({{ report().imported.length }})</summary>
       <p class="hint">
         @for (row of report().imported; track row.row) {
           <span class="chip">{{ row.row }} · {{ row.email }}</span>

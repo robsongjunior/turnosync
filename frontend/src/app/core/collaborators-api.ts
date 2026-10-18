@@ -7,7 +7,7 @@ import { Collaborator } from './models';
 export class CollaboratorsApi {
   private readonly http = inject(HttpClient);
 
-  /** Feeds the collaborator select of the shift form. */
+  /** Alimenta el selector de colaboradores del formulario de turnos. */
   list(): Promise<Collaborator[]> {
     return firstValueFrom(this.http.get<Collaborator[]>('/api/collaborators'));
   }

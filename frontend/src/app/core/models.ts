@@ -13,9 +13,9 @@ export interface Shift {
   date: string;
   /** HH:mm */
   startTime: string;
-  /** HH:mm. Earlier than startTime when the shift crosses midnight. */
+  /** HH:mm. Anterior a startTime cuando el turno cruza la medianoche. */
   endTime: string;
-  /** null = unknown (the holiday API failed for the collaborator's country). */
+  /** null = desconocido (la API de festivos falló para el país del colaborador). */
   isHoliday: boolean | null;
 }
 

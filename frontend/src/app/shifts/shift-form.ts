@@ -4,7 +4,7 @@ import { Collaborator, Shift, ShiftRequest } from '../core/models';
 import { describeError, fieldErrorsOf } from '../core/errors';
 import { ShiftsApi } from '../core/shifts-api';
 
-/** An equal start and end is not a shift. The rest (overlap, collaborator) is validated by the API. */
+/** Un inicio igual al fin no es un turno. El resto (solapamiento, colaborador) lo valida la API. */
 function startDiffersFromEnd(group: AbstractControl): ValidationErrors | null {
   const { startTime, endTime } = group.value as { startTime: string; endTime: string };
   return startTime && endTime && startTime === endTime ? { sameTime: true } : null;
@@ -18,7 +18,7 @@ function startDiffersFromEnd(group: AbstractControl): ValidationErrors | null {
 export class ShiftForm {
   private readonly api = inject(ShiftsApi);
 
-  /** The shift being edited; null to create a new one. */
+  /** El turno que se está editando; null para crear uno nuevo. */
   readonly shift = input<Shift | null>(null);
   readonly collaborators = input.required<Collaborator[]>();
 
@@ -36,13 +36,13 @@ export class ShiftForm {
   );
 
   protected readonly submitting = signal(false);
-  /** Per-field errors returned by the API (camelCase keys). */
+  /** Errores por campo devueltos por la API (claves en camelCase). */
   protected readonly serverErrors = signal<Record<string, string[]>>({});
-  /** Form-level error, such as the 409 overlap. */
+  /** Error del formulario completo, como el 409 por solapamiento. */
   protected readonly formError = signal<string | null>(null);
 
   constructor() {
-    // Fills the form when the shift being edited changes (or clears it, when creating).
+    // Rellena el formulario cuando cambia el turno que se edita (o lo vacía, al crear).
     effect(() => {
       const shift = this.shift();
       untracked(() => {
@@ -86,7 +86,7 @@ export class ShiftForm {
     } catch (error) {
       const fieldErrors = fieldErrorsOf(error);
       this.serverErrors.set(fieldErrors);
-      // No per-field errors (404, 409 overlap, network): show a message at the top of the form.
+      // Sin errores por campo (404, 409 por solapamiento, red): se muestra un mensaje arriba del formulario.
       this.formError.set(Object.keys(fieldErrors).length > 0 ? null : describeError(error));
     } finally {
       this.submitting.set(false);

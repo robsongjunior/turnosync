@@ -6,30 +6,30 @@
   @if (error(); as message) {
     <p class="banner banner-error" role="alert">
       <span>{{ message }}</span>
-      <button type="button" class="link" (click)="error.set(null)">Dismiss</button>
+      <button type="button" class="link" (click)="error.set(null)">Cerrar</button>
     </p>
   }
 
   <div class="toolbar">
-    <button type="button" class="primary" (click)="newShift()">+ New shift</button>
-    <button type="button" (click)="fileInput.click()" [disabled]="busy()">Import</button>
+    <button type="button" class="primary" (click)="newShift()">+ Nuevo turno</button>
+    <button type="button" (click)="fileInput.click()" [disabled]="busy()">Importar</button>
     <input #fileInput type="file" accept=".xlsx" hidden (change)="onFileSelected($event)" />
 
     <span class="spacer"></span>
 
     <label class="inline">
-      From
+      Desde
       <input type="date" [value]="exportFrom()" (input)="setExportFrom($event)" />
     </label>
     <label class="inline">
-      To
+      Hasta
       <input type="date" [value]="exportTo()" (input)="setExportTo($event)" />
     </label>
-    <button type="button" (click)="export()" [disabled]="!canExport()">Export</button>
+    <button type="button" (click)="export()" [disabled]="!canExport()">Exportar</button>
   </div>
 
   @if (!holidaysAvailable()) {
-    <p class="banner banner-warn" role="status">⚠ Holidays unavailable for some shifts.</p>
+    <p class="banner banner-warn" role="status">⚠ Festivos no disponibles para algunos turnos.</p>
   }
 
   @if (formOpen()) {
@@ -48,12 +48,12 @@
   <table>
     <thead>
       <tr>
-        <th>Collaborator</th>
-        <th>Date</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Holiday</th>
-        <th>Actions</th>
+        <th>Colaborador</th>
+        <th>Fecha</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Festivo</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
@@ -65,16 +65,16 @@
           <td>{{ shift.endTime }}</td>
           <td>
             @if (shift.isHoliday === true) {
-              <span class="badge">Yes</span>
+              <span class="badge">Sí</span>
             } @else if (shift.isHoliday === null) {
-              <span class="unknown" title="Unknown: the holiday service is unavailable">?</span>
+              <span class="unknown" title="Desconocido: el servicio de festivos no está disponible">?</span>
             }
           </td>
-          <td><button type="button" (click)="edit(shift)">Edit</button></td>
+          <td><button type="button" (click)="edit(shift)">Editar</button></td>
         </tr>
       } @empty {
         <tr>
-          <td colspan="6" class="empty">{{ loading() ? 'Loading…' : 'No shifts yet.' }}</td>
+          <td colspan="6" class="empty">{{ loading() ? 'Cargando…' : 'Todavía no hay turnos.' }}</td>
         </tr>
       }
     </tbody>

@@ -1,5 +1,5 @@
 <form class="panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-  <h2>{{ shift() ? 'Edit shift' : 'New shift' }}</h2>
+  <h2>{{ shift() ? 'Editar turno' : 'Nuevo turno' }}</h2>
 
   @if (formError(); as message) {
     <p class="banner banner-error" role="alert">{{ message }}</p>
@@ -7,15 +7,15 @@
 
   <div class="form-grid">
     <label>
-      Collaborator
+      Colaborador
       <select formControlName="collaboratorId">
-        <option [ngValue]="0" disabled>Select a collaborator</option>
+        <option [ngValue]="0" disabled>Selecciona un colaborador</option>
         @for (collaborator of collaborators(); track collaborator.id) {
           <option [ngValue]="collaborator.id">{{ collaborator.name }} ({{ collaborator.countryCode }})</option>
         }
       </select>
       @if (showError('collaboratorId')) {
-        <span class="field-error">Required</span>
+        <span class="field-error">Campo obligatorio</span>
       }
       @for (message of serverErrorsOf('collaboratorId'); track message) {
         <span class="field-error">{{ message }}</span>
@@ -23,10 +23,10 @@
     </label>
 
     <label>
-      Date
+      Fecha
       <input type="date" formControlName="date" />
       @if (showError('date')) {
-        <span class="field-error">Required</span>
+        <span class="field-error">Campo obligatorio</span>
       }
       @for (message of serverErrorsOf('date'); track message) {
         <span class="field-error">{{ message }}</span>
@@ -34,10 +34,10 @@
     </label>
 
     <label>
-      Start
+      Inicio
       <input type="time" formControlName="startTime" />
       @if (showError('startTime')) {
-        <span class="field-error">Required</span>
+        <span class="field-error">Campo obligatorio</span>
       }
       @for (message of serverErrorsOf('startTime'); track message) {
         <span class="field-error">{{ message }}</span>
@@ -45,13 +45,13 @@
     </label>
 
     <label>
-      End
+      Fin
       <input type="time" formControlName="endTime" />
       @if (showError('endTime')) {
-        <span class="field-error">Required</span>
+        <span class="field-error">Campo obligatorio</span>
       }
       @if (form.hasError('sameTime') && form.controls.endTime.touched) {
-        <span class="field-error">End must differ from start</span>
+        <span class="field-error">El fin debe ser distinto del inicio</span>
       }
       @for (message of serverErrorsOf('endTime'); track message) {
         <span class="field-error">{{ message }}</span>
@@ -59,10 +59,10 @@
     </label>
   </div>
 
-  <p class="hint">An end time earlier than the start time means the shift ends the next day.</p>
+  <p class="hint">Una hora de fin anterior a la de inicio significa que el turno termina al día siguiente.</p>
 
   <div class="actions">
-    <button type="submit" class="primary" [disabled]="submitting()">{{ submitting() ? 'Saving…' : 'Save' }}</button>
-    <button type="button" (click)="cancelled.emit()" [disabled]="submitting()">Cancel</button>
+    <button type="submit" class="primary" [disabled]="submitting()">{{ submitting() ? 'Guardando…' : 'Guardar' }}</button>
+    <button type="button" (click)="cancelled.emit()" [disabled]="submitting()">Cancelar</button>
   </div>
 </form>

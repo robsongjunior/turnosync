@@ -20,12 +20,12 @@ export class ShiftsPage implements OnInit {
   protected readonly collaborators = signal<Collaborator[]>([]);
 
   protected readonly formOpen = signal(false);
-  /** The shift being edited; null = the form (if open) creates a new one. */
+  /** El turno que se está editando; null = el formulario (si está abierto) crea uno nuevo. */
   protected readonly editing = signal<Shift | null>(null);
   protected readonly importReport = signal<ImportReport | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(false);
-  /** An import or export is in progress. */
+  /** Hay una importación o exportación en curso. */
   protected readonly busy = signal(false);
 
   protected readonly exportFrom = signal('');
@@ -74,7 +74,7 @@ export class ShiftsPage implements OnInit {
   protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    input.value = ''; // lets the same file be chosen again later
+    input.value = ''; // permite volver a elegir el mismo archivo más adelante
     if (!file) {
       return;
     }
@@ -108,7 +108,7 @@ export class ShiftsPage implements OnInit {
     }
 
     if (from > to) {
-      this.error.set("'From' must be on or before 'To'.");
+      this.error.set("'Desde' debe ser anterior o igual a 'Hasta'.");
       return;
     }
 

@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProblemDetails } from './models';
 
-/** Extracts the ProblemDetails from the error body, if any. In blob responses the body is still a Blob. */
+/** Extrae el ProblemDetails del cuerpo del error, si lo hay. En respuestas blob el cuerpo sigue siendo un Blob. */
 export function problemOf(error: unknown): ProblemDetails | null {
   if (error instanceof HttpErrorResponse && error.error && typeof error.error === 'object') {
     return error.error as ProblemDetails;
@@ -9,15 +9,15 @@ export function problemOf(error: unknown): ProblemDetails | null {
   return null;
 }
 
-/** Per-field errors (ValidationProblemDetails), keyed in camelCase like the API. */
+/** Errores por campo (ValidationProblemDetails), con las claves en camelCase como la API. */
 export function fieldErrorsOf(error: unknown): Record<string, string[]> {
   return problemOf(error)?.errors ?? {};
 }
 
-/** A single message to show the user. */
+/** Un único mensaje para mostrar al usuario. */
 export function describeError(error: unknown): string {
   if (error instanceof HttpErrorResponse && error.status === 0) {
-    return 'Cannot reach the server. Check that the API is running.';
+    return 'No se puede conectar con el servidor. Comprueba que la API esté en ejecución.';
   }
 
   const problem = problemOf(error);
@@ -30,5 +30,5 @@ export function describeError(error: unknown): string {
     return messages.join(' ');
   }
 
-  return problem?.title ?? 'Unexpected error. Please try again.';
+  return problem?.title ?? 'Error inesperado. Inténtalo de nuevo.';
 }
