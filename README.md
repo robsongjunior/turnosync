@@ -223,9 +223,9 @@ El frontend se verificó a mano (crear, editar, 409, importar, exportar y fallo 
 
 ## Uso de IA
 
-- **Herramienta:** Claude Code (Anthropic), con el modelo Claude Sonnet 5.5, como asistente de desarrollo.
+- **Herramienta:** Claude Code (Anthropic), con los modelos Claude Sonnet 5.5 y Claude Opus 5.5, como asistente de desarrollo.
 - **Para qué:** la planificación (alcance, decisiones, arquitectura y checklist) está escrita por el autor en un documento previo; la
   implementación (código del backend y del frontend, pruebas, `Dockerfile`/`docker-compose` y este README) se generó con la herramienta
   siguiendo ese plan. También se usó para verificar el resultado: compilación, ejecución de la suite de pruebas, prueba manual de la interfaz
-  en un navegador y una simulación local de las etapas del `Dockerfile`.
+  en un navegador y la ejecución real con Docker (`docker-compose up` y `docker-compose run --rm tests`).
 - **Qué revisó el autor a mano:** _pendiente de completar por el autor antes de la entrega (qué partes revisó y puede explicar)._
