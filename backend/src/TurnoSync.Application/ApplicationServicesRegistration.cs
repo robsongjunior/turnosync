@@ -19,6 +19,8 @@ public static class ApplicationServicesRegistration
 
         services.AddScoped<CollaboratorService>();
         services.AddScoped<ShiftService>();
+        services.AddScoped<ShiftImportService>();
+        services.AddScoped<ShiftExportService>();
 
         return services;
     }

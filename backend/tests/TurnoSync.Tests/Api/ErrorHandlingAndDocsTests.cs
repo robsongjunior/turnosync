@@ -78,6 +78,9 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
         Assert.Contains("\"/api/collaborators/{id}\"", json);
         Assert.Contains("\"/api/shifts\"", json);
         Assert.Contains("\"/api/shifts/{id}\"", json);
+        Assert.Contains("\"/api/shifts/import\"", json);
+        Assert.Contains("\"/api/shifts/export\"", json);
+        Assert.Contains("multipart/form-data", json);
     }
 
     [Fact]

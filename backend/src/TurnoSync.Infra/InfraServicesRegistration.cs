@@ -9,6 +9,7 @@ using TurnoSync.Application.Shifts;
 using TurnoSync.Infra.Holidays;
 using TurnoSync.Infra.Persistence;
 using TurnoSync.Infra.Persistence.Repositories;
+using TurnoSync.Infra.Spreadsheets;
 
 namespace TurnoSync.Infra;
 
@@ -44,6 +45,7 @@ public static class InfraServicesRegistration
         services.AddScoped<IShiftRepository, ShiftRepository>();
 
         services.AddNagerDateHolidays();
+        services.AddSingleton<IShiftSpreadsheet, ClosedXmlShiftSpreadsheet>();
 
         return services;
     }
