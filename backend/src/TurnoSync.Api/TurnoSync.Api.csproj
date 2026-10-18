@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- Comentários XML alimentam o Swagger; 1591 = membro público sem comentário -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TurnoSync.Application\TurnoSync.Application.csproj" />
-    <!-- Referencia a Infra apenas para o registro de DI no Program.cs (raiz de composicao) -->
+    <!-- Referência a Infra apenas para o registro de DI no Program.cs (raiz de composição) -->
     <ProjectReference Include="..\TurnoSync.Infra\TurnoSync.Infra.csproj" />
   </ItemGroup>
 
