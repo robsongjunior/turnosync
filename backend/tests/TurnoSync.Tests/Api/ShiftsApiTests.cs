@@ -183,11 +183,11 @@ public sealed class ShiftsApiTests : IDisposable
         await CreateShiftAsync(3, "2026-10-12", "08:00", "16:00");
         await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");
 
-        var shifts = await _client.GetFromJsonAsync<List<ShiftResponse>>("/api/shifts", TestJson.Options);
+        var list = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
 
         Assert.Equal(
             ["Ana Torres", "Lucía Fernández", "João Lima"],
-            shifts!.Select(s => s.CollaboratorName));
+            list!.Items.Select(s => s.CollaboratorName));
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public sealed class ShiftsApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync($"/api/shifts/{shift.Id}")).StatusCode);
-        Assert.Empty((await _client.GetFromJsonAsync<List<ShiftResponse>>("/api/shifts", TestJson.Options))!);
+        Assert.Empty((await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options))!.Items);
         Assert.Equal(HttpStatusCode.Created, (await PostShiftAsync(1, "2026-10-12", "08:00", "16:00")).StatusCode);
     }
 

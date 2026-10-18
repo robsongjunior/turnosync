@@ -7,9 +7,13 @@ namespace TurnoSync.Api.Controllers;
 [Route(RouteConsts.Shifts)]
 public sealed class ShiftsController(ShiftService service) : BaseController
 {
-    /// <summary>Lista todos os turnos, ordenados pelo início e depois pelo nome do colaborador.</summary>
+    /// <summary>
+    /// Lista todos os turnos, ordenados pelo início e depois pelo nome do colaborador, marcando os que
+    /// começam em feriado nacional do país do colaborador (Nager.Date). Se a consulta de feriados falhar,
+    /// <c>isHoliday</c> vem nulo nos turnos do país afetado e <c>holidaysAvailable</c> vem falso; a listagem não falha.
+    /// </summary>
     [HttpGet]
-    [ProducesResponseType<IReadOnlyList<ShiftResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ShiftListResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(CancellationToken ct) => Ok(await service.ListAsync(ct));
 
     /// <summary>Detalha um turno.</summary>

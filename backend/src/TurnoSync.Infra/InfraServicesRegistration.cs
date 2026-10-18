@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TurnoSync.Application.Collaborators;
+using TurnoSync.Application.Holidays;
 using TurnoSync.Application.Shifts;
+using TurnoSync.Infra.Holidays;
 using TurnoSync.Infra.Persistence;
 using TurnoSync.Infra.Persistence.Repositories;
 
@@ -17,6 +19,9 @@ public static class InfraServicesRegistration
     // Banco em memória com cache compartilhado: todo DbContext enxerga o mesmo banco.
     // Para persistir em arquivo basta trocar por, por exemplo, "Data Source=/data/turnosync.db".
     public const string DefaultConnectionString = "Data Source=TurnoSync;Mode=Memory;Cache=Shared";
+
+    public const string NagerBaseUrlKey = "Nager:BaseUrl";
+    public const string DefaultNagerBaseUrl = "https://date.nager.at/";
 
     public static IServiceCollection AddInfra(this IServiceCollection services)
     {
@@ -38,7 +43,33 @@ public static class InfraServicesRegistration
         services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
         services.AddScoped<IShiftRepository, ShiftRepository>();
 
+        services.AddNagerDateHolidays();
+
         return services;
+    }
+
+    /// <summary>
+    /// Cliente tipado da Nager.Date com cache em memória e resiliência: timeout total de 5s,
+    /// 2s por tentativa e 1 retry, para que uma API externa lenta ou fora do ar não trave a listagem.
+    /// </summary>
+    public static IHttpClientBuilder AddNagerDateHolidays(this IServiceCollection services)
+    {
+        services.AddMemoryCache();
+
+        var httpClient = services.AddHttpClient<IHolidayProvider, NagerDateHolidayProvider>((sp, client) =>
+            client.BaseAddress = new Uri(
+                sp.GetRequiredService<IConfiguration>()[NagerBaseUrlKey] ?? DefaultNagerBaseUrl));
+
+        httpClient.AddStandardResilienceHandler(options =>
+        {
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(5);
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(2);
+            options.Retry.MaxRetryAttempts = 1;
+            // O padrão (2s) estouraria o timeout total antes da segunda tentativa começar.
+            options.Retry.Delay = TimeSpan.FromMilliseconds(500);
+        });
+
+        return httpClient;
     }
 
     /// <summary>Aplica as migrations (e o seed de colaboradores) no startup.</summary>

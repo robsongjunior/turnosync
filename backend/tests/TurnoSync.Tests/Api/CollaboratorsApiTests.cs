@@ -119,8 +119,8 @@ public sealed class CollaboratorsApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync("/api/collaborators/1")).StatusCode);
-        var shifts = await _client.GetFromJsonAsync<List<ShiftResponse>>("/api/shifts", TestJson.Options);
-        Assert.Equal([2], shifts!.Select(s => s.CollaboratorId));
+        var list = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
+        Assert.Equal([2], list!.Items.Select(s => s.CollaboratorId));
         Assert.Equal(HttpStatusCode.Created, (await PostAsync("New Ana", "ana@turnosync.dev", "ES")).StatusCode);
     }
 

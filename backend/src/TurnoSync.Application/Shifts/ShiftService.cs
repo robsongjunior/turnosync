@@ -2,6 +2,7 @@ using System.Globalization;
 using FluentValidation;
 using TurnoSync.Application.Collaborators;
 using TurnoSync.Application.Common;
+using TurnoSync.Application.Holidays;
 using TurnoSync.Domain.Shifts;
 
 namespace TurnoSync.Application.Shifts;
@@ -9,10 +10,34 @@ namespace TurnoSync.Application.Shifts;
 public sealed class ShiftService(
     IShiftRepository shifts,
     ICollaboratorRepository collaborators,
+    IHolidayProvider holidays,
     IValidator<ShiftRequest> validator)
 {
-    public async Task<IReadOnlyList<ShiftResponse>> ListAsync(CancellationToken ct = default) =>
-        (await shifts.ListWithCollaboratorAsync(ct)).Select(s => ToResponse(s, s.Collaborator!.Name)).ToList();
+    /// <summary>
+    /// Lista os turnos marcando os que começam em feriado nacional do país do colaborador.
+    /// Uma consulta por (país, ano) presente na listagem. Se a consulta falhar, os turnos desse país
+    /// vêm com IsHoliday nulo e HolidaysAvailable falso; a listagem nunca falha por causa disso.
+    /// </summary>
+    public async Task<ShiftListResponse> ListAsync(CancellationToken ct = default)
+    {
+        var list = await shifts.ListWithCollaboratorAsync(ct);
+
+        var keys = list.Select(s => (s.Collaborator!.CountryCode, s.Date.Year)).Distinct().ToList();
+        var lookups = await Task.WhenAll(keys.Select(async key =>
+            (Key: key, Holidays: await holidays.GetNationalHolidaysAsync(key.CountryCode, key.Year, ct))));
+        var holidaysByKey = lookups.ToDictionary(l => l.Key, l => l.Holidays);
+
+        var items = list.Select(s =>
+        {
+            var countryHolidays = holidaysByKey[(s.Collaborator!.CountryCode, s.Date.Year)];
+            bool? isHoliday = countryHolidays?.Contains(s.Date);
+
+            return new ShiftListItem(
+                s.Id, s.CollaboratorId, s.Collaborator.Name, s.Date, s.StartTime, s.EndTime, isHoliday);
+        }).ToList();
+
+        return new ShiftListResponse(items, HolidaysAvailable: holidaysByKey.Values.All(h => h is not null));
+    }
 
     public async Task<Result<ShiftResponse>> GetAsync(int id, CancellationToken ct = default)
     {
