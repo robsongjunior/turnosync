@@ -29,13 +29,18 @@ app.Services.MigrateDatabase();
 
 app.UseExceptionHandler();
 
-// Swagger fica habilitado em qualquer ambiente, inclusive no container.
+// Swagger is enabled in every environment, including the container.
 app.UseSwagger();
 app.UseSwaggerUI();
+
+// The Angular build lives in wwwroot and is served from the API's own origin (no CORS, no nginx).
+// No SPA fallback: the frontend has no router, so an unknown /api route stays a 404.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapControllers();
 
 app.Run();
 
-// Exposto para o WebApplicationFactory nos testes de integração
+// Exposed for WebApplicationFactory in the integration tests
 public partial class Program;
