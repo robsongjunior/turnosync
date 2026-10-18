@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.2.0" />
-    <!-- Necessario so para IServiceCollection no ApplicationServicesRegistration -->
+    <!-- Needed only for IServiceCollection in ApplicationServicesRegistration -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.21" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using TurnoSync.Application.Holidays;
 
 namespace TurnoSync.Tests.Support;
 
-/// <summary>Substitui a Nager.Date nos testes de integração: sem rede e com respostas controladas por país e ano.</summary>
+/// <summary>Replaces Nager.Date in the integration tests: no network, with responses controlled per country and year.</summary>
 public sealed class FakeHolidayProvider : IHolidayProvider
 {
     private static readonly IReadOnlySet<DateOnly> NoHolidays = new HashSet<DateOnly>();
@@ -16,7 +16,7 @@ public sealed class FakeHolidayProvider : IHolidayProvider
     public void SetHolidays(string country, int year, params DateOnly[] dates) =>
         _responses[(country, year)] = dates.ToHashSet();
 
-    /// <summary>Simula a Nager.Date fora do ar para o país e ano.</summary>
+    /// <summary>Simulates Nager.Date being down for the country and year.</summary>
     public void SetUnavailable(string country, int year) => _responses[(country, year)] = null;
 
     public Task<IReadOnlySet<DateOnly>?> GetNationalHolidaysAsync(

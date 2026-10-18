@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <!-- Comentários XML alimentam o Swagger; 1591 = membro público sem comentário, 1573 = parâmetro (CancellationToken) sem param tag -->
+    <!-- XML comments feed Swagger; 1591 = public member without a comment, 1573 = parameter (CancellationToken) without a param tag -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;1573</NoWarn>
   </PropertyGroup>
@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TurnoSync.Application\TurnoSync.Application.csproj" />
-    <!-- Referência a Infra apenas para o registro de DI no Program.cs (raiz de composição) -->
+    <!-- Reference to Infra only for the DI registration in Program.cs (composition root) -->
     <ProjectReference Include="..\TurnoSync.Infra\TurnoSync.Infra.csproj" />
   </ItemGroup>
 

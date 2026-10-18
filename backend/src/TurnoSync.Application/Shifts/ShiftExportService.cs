@@ -8,8 +8,8 @@ public sealed record ExportedFile(string FileName, byte[] Content);
 public sealed class ShiftExportService(IShiftRepository shifts, IShiftSpreadsheet spreadsheet)
 {
     /// <summary>
-    /// Exporta os turnos cuja data (Date, a de início) está entre from e to, ambos inclusivos e obrigatórios,
-    /// na mesma ordem da listagem e com as mesmas colunas da importação.
+    /// Exports the shifts whose date (Date, the start date) is between from and to, both inclusive and required,
+    /// in the same order as the listing and with the same columns as the import.
     /// </summary>
     public async Task<Result<ExportedFile>> ExportAsync(DateOnly? from, DateOnly? to, CancellationToken ct = default)
     {

@@ -14,9 +14,9 @@ public sealed class ShiftService(
     IValidator<ShiftRequest> validator)
 {
     /// <summary>
-    /// Lista os turnos marcando os que começam em feriado nacional do país do colaborador.
-    /// Uma consulta por (país, ano) presente na listagem. Se a consulta falhar, os turnos desse país
-    /// vêm com IsHoliday nulo e HolidaysAvailable falso; a listagem nunca falha por causa disso.
+    /// Lists the shifts, flagging the ones that start on a national public holiday of the collaborator's country.
+    /// One lookup per (country, year) present in the listing. If a lookup fails, that country's shifts
+    /// come with IsHoliday null and HolidaysAvailable false; the listing never fails because of it.
     /// </summary>
     public async Task<ShiftListResponse> ListAsync(CancellationToken ct = default)
     {
@@ -99,7 +99,7 @@ public sealed class ShiftService(
             return CollaboratorNotFound(request.CollaboratorId.Value);
         }
 
-        // A checagem usa um candidato para não alterar a entidade rastreada antes de saber se o conflito existe.
+        // The check uses a candidate so the tracked entity is not changed before we know whether there is a conflict.
         var candidate = Shift.Create(collaborator.Id, request.Date!.Value, request.StartTime!.Value, request.EndTime!.Value);
 
         if (await FindOverlapAsync(candidate, excludeId: id, ct) is { } existing)
@@ -128,8 +128,8 @@ public sealed class ShiftService(
     }
 
     /// <summary>
-    /// Como um turno dura menos de 24h, só os turnos do dia anterior ao seguinte podem se sobrepor;
-    /// quem decide é a entidade (<see cref="Shift.Overlaps"/>).
+    /// Since a shift lasts less than 24h, only shifts from the previous to the next day can overlap it;
+    /// the entity decides (<see cref="Shift.Overlaps"/>).
     /// </summary>
     private async Task<Shift?> FindOverlapAsync(Shift candidate, int? excludeId, CancellationToken ct)
     {

@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
 
-  # Fora do `docker-compose up`. Executar com: docker-compose run --rm tests
+  # Not started by `docker-compose up`. Run it with: docker-compose run --rm tests
   tests:
     profiles: ["test"]
     build:

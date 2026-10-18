@@ -67,7 +67,7 @@ public sealed class CollaboratorService(
         return ToResponse(collaborator);
     }
 
-    /// <summary>Soft delete do colaborador e de todos os seus turnos, em um único SaveChanges (atômico).</summary>
+    /// <summary>Soft-deletes the collaborator and all of their shifts in a single SaveChanges (atomic).</summary>
     public async Task<Result> DeleteAsync(int id, CancellationToken ct = default)
     {
         var collaborator = await collaborators.GetByIdAsync(id, ct);
@@ -83,7 +83,7 @@ public sealed class CollaboratorService(
 
         collaborator.Delete();
 
-        // Os dois repositórios compartilham o mesmo DbContext (escopo da requisição).
+        // Both repositories share the same DbContext (request scope).
         await collaborators.SaveChangesAsync(ct);
 
         return Result.Success();

@@ -5,9 +5,9 @@ namespace TurnoSync.Application.Collaborators;
 
 public interface ICollaboratorRepository : IRepository<Collaborator>
 {
-    /// <summary>Existe outro colaborador (não excluído) com este e-mail? O e-mail já deve vir normalizado.</summary>
+    /// <summary>Is there another (non-deleted) collaborator with this email? The email must already be normalized.</summary>
     Task<bool> EmailExistsAsync(string email, int? excludeId, CancellationToken ct = default);
 
-    /// <summary>Busca colaboradores pelos e-mails (usado pela importação). Os e-mails já devem vir normalizados.</summary>
+    /// <summary>Finds collaborators by email (used by the import). The emails must already be normalized.</summary>
     Task<IReadOnlyList<Collaborator>> GetByEmailsAsync(IEnumerable<string> emails, CancellationToken ct = default);
 }

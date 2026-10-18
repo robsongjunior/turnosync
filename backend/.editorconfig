@@ -1,9 +1,9 @@
-# Padrao de codigo do backend. Referencias oficiais da Microsoft:
+# Backend code style. Official Microsoft references:
 #  - Framework Design Guidelines
 #  - C# Coding Conventions
 #  - Identifier naming rules and conventions
 #  - Code-style rules (IDExxxx)
-# As regras com severidade "warning" quebram o build (EnforceCodeStyleInBuild + TreatWarningsAsErrors).
+# Rules with "warning" severity break the build (EnforceCodeStyleInBuild + TreatWarningsAsErrors).
 root = true
 
 [*]
@@ -18,12 +18,12 @@ indent_size = 2
 
 [*.cs]
 
-# --- Namespaces e usings ---
+# --- Namespaces and usings ---
 csharp_style_namespace_declarations = file_scoped:warning
 csharp_using_directive_placement = outside_namespace:warning
 dotnet_sort_system_directives_first = true
 
-# --- this. e tipos predefinidos ---
+# --- this. and predefined types ---
 dotnet_style_qualification_for_field = false:warning
 dotnet_style_qualification_for_property = false:warning
 dotnet_style_qualification_for_method = false:warning
@@ -31,7 +31,7 @@ dotnet_style_qualification_for_event = false:warning
 dotnet_style_predefined_type_for_locals_parameters_members = true:warning
 dotnet_style_predefined_type_for_member_access = true:warning
 
-# --- Preferencias de linguagem ---
+# --- Language preferences ---
 csharp_style_prefer_primary_constructors = true:suggestion
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
@@ -42,35 +42,35 @@ csharp_prefer_simple_using_statement = true:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
 csharp_new_line_before_open_brace = all
 
-# --- Nomes ---
-# Constantes: PascalCase
+# --- Naming ---
+# Constants: PascalCase
 dotnet_naming_rule.constants_pascal_case.severity = warning
 dotnet_naming_rule.constants_pascal_case.symbols = constants
 dotnet_naming_rule.constants_pascal_case.style = pascal_case_style
 dotnet_naming_symbols.constants.applicable_kinds = field
 dotnet_naming_symbols.constants.required_modifiers = const
 
-# Campos estaticos: sem regra de nome
+# Static fields: no naming rule
 dotnet_naming_rule.static_fields_any.severity = none
 dotnet_naming_rule.static_fields_any.symbols = static_fields
 dotnet_naming_rule.static_fields_any.style = pascal_case_style
 dotnet_naming_symbols.static_fields.applicable_kinds = field
 dotnet_naming_symbols.static_fields.required_modifiers = static
 
-# Campos privados: _camelCase
+# Private fields: _camelCase
 dotnet_naming_rule.private_fields_underscore_camel_case.severity = warning
 dotnet_naming_rule.private_fields_underscore_camel_case.symbols = private_fields
 dotnet_naming_rule.private_fields_underscore_camel_case.style = underscore_camel_case_style
 dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 
-# Interfaces: prefixo I
+# Interfaces: I prefix
 dotnet_naming_rule.interfaces_start_with_i.severity = warning
 dotnet_naming_rule.interfaces_start_with_i.symbols = interfaces
 dotnet_naming_rule.interfaces_start_with_i.style = i_prefix_style
 dotnet_naming_symbols.interfaces.applicable_kinds = interface
 
-# Tipos e membros nao privados: PascalCase
+# Types and non-private members: PascalCase
 dotnet_naming_rule.types_pascal_case.severity = warning
 dotnet_naming_rule.types_pascal_case.symbols = types
 dotnet_naming_rule.types_pascal_case.style = pascal_case_style
@@ -82,7 +82,7 @@ dotnet_naming_rule.public_members_pascal_case.style = pascal_case_style
 dotnet_naming_symbols.public_members.applicable_kinds = property, method, event
 dotnet_naming_symbols.public_members.applicable_accessibilities = public, internal, protected, protected_internal
 
-# Locais e parametros: camelCase
+# Locals and parameters: camelCase
 dotnet_naming_rule.locals_camel_case.severity = warning
 dotnet_naming_rule.locals_camel_case.symbols = locals_and_parameters
 dotnet_naming_rule.locals_camel_case.style = camel_case_style
@@ -95,10 +95,10 @@ dotnet_naming_style.underscore_camel_case_style.capitalization = camel_case
 dotnet_naming_style.i_prefix_style.required_prefix = I
 dotnet_naming_style.i_prefix_style.capitalization = pascal_case
 
-# Codigo gerado (migrations) nao e analisado
+# Generated code (migrations) is not analyzed
 [**/Migrations/*.cs]
 generated_code = true
 
-# Testes seguem {Method}_Should{Result}_When{Condition}
+# Tests follow {Method}_Should{Result}_When{Condition}
 [tests/**/*.cs]
 dotnet_naming_rule.public_members_pascal_case.severity = none

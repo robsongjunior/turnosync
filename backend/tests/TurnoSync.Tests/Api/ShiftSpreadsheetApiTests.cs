@@ -46,7 +46,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
             .ToList();
     }
 
-    // --- Importação ---
+    // --- Import ---
 
     [Fact]
     public async Task Import_ShouldReturn200WithTheReport_AndPersistTheAcceptedRows()
@@ -120,14 +120,14 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    // --- Exportação ---
+    // --- Export ---
 
     [Fact]
     public async Task Export_ShouldIncludeBothEndsOfThePeriodAndExcludeOutsideAndDeletedShifts()
     {
         await CreateShiftAsync(1, "2026-10-11");
-        await CreateShiftAsync(1, "2026-10-12");                      // extremo inferior
-        await CreateShiftAsync(2, "2026-10-14", "22:00", "06:00");    // extremo superior (noturno, pela data de início)
+        await CreateShiftAsync(1, "2026-10-12");                      // lower bound
+        await CreateShiftAsync(2, "2026-10-14", "22:00", "06:00");    // upper bound (overnight, by start date)
         await CreateShiftAsync(1, "2026-10-15");
         await CreateShiftAsync(3, "2026-10-13");
         var deleted = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);

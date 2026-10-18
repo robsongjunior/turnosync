@@ -51,10 +51,10 @@ public sealed class ValidatorTests
     }
 
     [Theory]
-    [InlineData("E")]      // curto demais
-    [InlineData("ESP")]    // alpha-3, não alpha-2
-    [InlineData("12")]     // não é letra
-    [InlineData("ZZ")]     // 2 letras, mas não é país
+    [InlineData("E")]      // too short
+    [InlineData("ESP")]    // alpha-3, not alpha-2
+    [InlineData("12")]     // not letters
+    [InlineData("ZZ")]     // 2 letters, but not a country
     public void CollaboratorValidator_ShouldFail_WhenCountryCodeIsNotAnIsoAlpha2Country(string country)
     {
         var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", "ana@turnosync.dev", country));

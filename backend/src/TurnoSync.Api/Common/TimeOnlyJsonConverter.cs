@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 namespace TurnoSync.Api.Common;
 
 /// <summary>
-/// Horários trafegam como HH:mm (o padrão do System.Text.Json é HH:mm:ss). Na leitura, segundos são
-/// aceitos mas descartados.
+/// Times travel as HH:mm (System.Text.Json defaults to HH:mm:ss). When reading, seconds are accepted
+/// but discarded.
 /// </summary>
 public sealed class TimeOnlyJsonConverter : JsonConverter<TimeOnly>
 {

@@ -10,10 +10,10 @@ public static class ApplicationServicesRegistration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Mensagens de erro da API sempre em inglês, independente da cultura da máquina.
+        // API error messages are always in English, regardless of the machine culture.
         ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en-US");
 
-        // Validators não guardam estado, então um singleton basta.
+        // Validators are stateless, so a singleton is enough.
         services.AddSingleton<IValidator<CollaboratorRequest>, CollaboratorRequestValidator>();
         services.AddSingleton<IValidator<ShiftRequest>, ShiftRequestValidator>();
 

@@ -5,8 +5,8 @@ using TurnoSync.Infra.Persistence;
 namespace TurnoSync.Tests.Support;
 
 /// <summary>
-/// Banco SQLite em memória com nome único por teste, criado com as migrations reais (inclui o seed).
-/// A conexão keep-alive mantém o banco vivo enquanto o teste usa vários DbContext.
+/// In-memory SQLite database with a unique name per test, created with the real migrations (including the seed).
+/// The keep-alive connection keeps the database alive while the test uses several DbContexts.
 /// </summary>
 public sealed class SqliteTestDatabase : IDisposable
 {

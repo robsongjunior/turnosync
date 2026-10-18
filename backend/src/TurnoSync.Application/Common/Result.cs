@@ -2,17 +2,17 @@ namespace TurnoSync.Application.Common;
 
 public enum ErrorType
 {
-    /// <summary>Dados inválidos (HTTP 400).</summary>
+    /// <summary>Invalid data (HTTP 400).</summary>
     Validation,
 
-    /// <summary>Recurso inexistente (HTTP 404).</summary>
+    /// <summary>Resource does not exist (HTTP 404).</summary>
     NotFound,
 
-    /// <summary>Conflito com o estado atual, como e-mail duplicado ou turno sobreposto (HTTP 409).</summary>
+    /// <summary>Conflict with the current state, such as a duplicate email or an overlapping shift (HTTP 409).</summary>
     Conflict,
 }
 
-/// <summary>Erro de negócio. <see cref="FieldErrors"/> só é preenchido em erros de validação.</summary>
+/// <summary>Business error. <see cref="FieldErrors"/> is only filled for validation errors.</summary>
 public sealed record ResultError(ErrorType Type, string Message, IReadOnlyDictionary<string, string[]> FieldErrors)
 {
     private static readonly IReadOnlyDictionary<string, string[]> NoFieldErrors = new Dictionary<string, string[]>();
@@ -28,7 +28,7 @@ public sealed record ResultError(ErrorType Type, string Message, IReadOnlyDictio
     public static ResultError Conflict(string message) => new(ErrorType.Conflict, message, NoFieldErrors);
 }
 
-/// <summary>Resultado de uma operação sem valor de retorno. Erro de negócio é valor, não exceção.</summary>
+/// <summary>Outcome of an operation with no return value. A business error is a value, not an exception.</summary>
 public sealed class Result
 {
     private Result(ResultError? error) => Error = error;
@@ -42,7 +42,7 @@ public sealed class Result
     public static implicit operator Result(ResultError error) => new(error);
 }
 
-/// <summary>Resultado de uma operação com valor de retorno. Erro de negócio é valor, não exceção.</summary>
+/// <summary>Outcome of an operation that returns a value. A business error is a value, not an exception.</summary>
 public sealed class Result<T>
 {
     private Result(T? value, ResultError? error)

@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace TurnoSync.Application.Shifts;
 
-/// <summary>Usado tanto pela API quanto, linha a linha, pela importação do Excel.</summary>
+/// <summary>Used by the API and, row by row, by the Excel import.</summary>
 public sealed class ShiftRequestValidator : AbstractValidator<ShiftRequest>
 {
     public ShiftRequestValidator()
@@ -14,7 +14,7 @@ public sealed class ShiftRequestValidator : AbstractValidator<ShiftRequest>
         RuleFor(x => x.StartTime).NotNull();
         RuleFor(x => x.EndTime).NotNull();
 
-        // A condição vai numa regra separada: When() se aplicaria também ao NotNull acima.
+        // The condition goes in a separate rule: When() would also apply to the NotNull above.
         RuleFor(x => x.EndTime)
             .Must((request, endTime) => endTime != request.StartTime)
             .When(x => x.StartTime is not null && x.EndTime is not null)

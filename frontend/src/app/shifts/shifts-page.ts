@@ -20,12 +20,12 @@ export class ShiftsPage implements OnInit {
   protected readonly collaborators = signal<Collaborator[]>([]);
 
   protected readonly formOpen = signal(false);
-  /** Turno em edição; null = o formulário (se aberto) cria um novo. */
+  /** The shift being edited; null = the form (if open) creates a new one. */
   protected readonly editing = signal<Shift | null>(null);
   protected readonly importReport = signal<ImportReport | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(false);
-  /** Importação ou exportação em andamento. */
+  /** An import or export is in progress. */
   protected readonly busy = signal(false);
 
   protected readonly exportFrom = signal('');
@@ -74,7 +74,7 @@ export class ShiftsPage implements OnInit {
   protected async onFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    input.value = ''; // permite escolher o mesmo arquivo de novo depois
+    input.value = ''; // lets the same file be chosen again later
     if (!file) {
       return;
     }

@@ -40,7 +40,7 @@ export class ShiftsApi {
         }),
       );
 
-      // O nome vem do servidor (shifts_{from}_{to}.xlsx); o fallback cobre um proxy que remova o header.
+      // The name comes from the server (shifts_{from}_{to}.xlsx); the fallback covers a proxy that strips the header.
       const disposition = response.headers.get('Content-Disposition') ?? '';
       const fileName =
         /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition)?.[1] ?? `shifts_${from}_${to}.xlsx`;
@@ -52,7 +52,7 @@ export class ShiftsApi {
   }
 }
 
-/** Com responseType 'blob' o corpo de um erro também chega como Blob; devolve-o já como JSON. */
+/** With responseType 'blob' an error body also arrives as a Blob; returns it already parsed as JSON. */
 async function withJsonBody(error: unknown): Promise<unknown> {
   if (!(error instanceof HttpErrorResponse) || !(error.error instanceof Blob)) {
     return error;

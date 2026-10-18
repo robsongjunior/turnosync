@@ -5,7 +5,7 @@ namespace TurnoSync.Application.Common;
 
 internal static class ValidationResultExtensions
 {
-    /// <summary>Agrupa as falhas por campo, com o nome em camelCase (o mesmo do JSON da API).</summary>
+    /// <summary>Groups the failures by field, with the name in camelCase (the same as the API JSON).</summary>
     public static ResultError ToResultError(this ValidationResult result) =>
         ResultError.Validation(result.Errors
             .GroupBy(e => JsonNamingPolicy.CamelCase.ConvertName(e.PropertyName))

@@ -13,9 +13,9 @@ export interface Shift {
   date: string;
   /** HH:mm */
   startTime: string;
-  /** HH:mm. Menor que startTime quando o turno atravessa a meia-noite. */
+  /** HH:mm. Earlier than startTime when the shift crosses midnight. */
   endTime: string;
-  /** null = desconhecido (a API de feriados falhou para o país do colaborador). */
+  /** null = unknown (the holiday API failed for the collaborator's country). */
   isHoliday: boolean | null;
 }
 
@@ -47,7 +47,7 @@ export interface ImportReport {
   failed: FailedRow[];
 }
 
-/** ProblemDetails / ValidationProblemDetails do ASP.NET Core. */
+/** ASP.NET Core ProblemDetails / ValidationProblemDetails. */
 export interface ProblemDetails {
   title?: string;
   detail?: string;

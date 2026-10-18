@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace TurnoSync.Infra.Persistence;
 
-/// <summary>Usada apenas pelas ferramentas do EF (dotnet ef migrations); não participa da execução.</summary>
+/// <summary>Used only by the EF tooling (dotnet ef migrations); it does not take part at runtime.</summary>
 public sealed class TurnoSyncContextFactory : IDesignTimeDbContextFactory<TurnoSyncContext>
 {
     public TurnoSyncContext CreateDbContext(string[] args)

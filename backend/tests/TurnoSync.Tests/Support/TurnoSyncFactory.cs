@@ -10,15 +10,15 @@ using TurnoSync.Application.Holidays;
 namespace TurnoSync.Tests.Support;
 
 /// <summary>
-/// Sobe a API inteira em memória. Cada instância usa seu próprio banco SQLite em memória
-/// (nome único) e uma Nager.Date falsa, então os testes não compartilham estado nem usam a rede.
+/// Starts the whole API in memory. Each instance uses its own in-memory SQLite database
+/// (unique name) and a fake Nager.Date, so tests share no state and use no network.
 /// </summary>
 public sealed class TurnoSyncFactory : WebApplicationFactory<Program>
 {
     private readonly string _connectionString =
         $"Data Source=TurnoSyncApi_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
 
-    /// <summary>Por padrão devolve "sem feriados"; os testes configuram o que precisarem.</summary>
+    /// <summary>Returns "no holidays" by default; tests configure whatever they need.</summary>
     public FakeHolidayProvider Holidays { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -32,7 +32,7 @@ public sealed class TurnoSyncFactory : WebApplicationFactory<Program>
 
 public static class TestJson
 {
-    /// <summary>Mesmas regras de JSON da API (camelCase e horários HH:mm).</summary>
+    /// <summary>Same JSON rules as the API (camelCase and HH:mm times).</summary>
     public static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         Converters = { new TimeOnlyJsonConverter() },

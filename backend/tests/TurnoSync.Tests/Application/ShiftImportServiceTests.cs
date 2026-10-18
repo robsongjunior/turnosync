@@ -10,8 +10,8 @@ using TurnoSync.Tests.Support;
 namespace TurnoSync.Tests.Application;
 
 /// <summary>
-/// Importação com planilhas geradas em memória, o adaptador real do ClosedXML e um SQLite em memória
-/// criado pelas migrations. Colaboradores do seed: 1 Ana, 2 João, 3 Lucía, 4 Carlos, 5 Inês.
+/// Import with spreadsheets generated in memory, the real ClosedXML adapter and an in-memory SQLite
+/// created by the migrations. Seed collaborators: 1 Ana, 2 João, 3 Lucía, 4 Carlos, 5 Inês.
 /// </summary>
 public sealed class ShiftImportServiceTests : IDisposable
 {
@@ -65,16 +65,16 @@ public sealed class ShiftImportServiceTests : IDisposable
         await SeedShiftAsync(1, new DateOnly(2026, 10, 12), "08:00", "16:00");
         var file = SheetBuilder.Standard(
             ["ana@turnosync.dev", "2026-10-13", "08:00", "16:00"],      // 2  ok
-            ["ana@turnosync.dev", "2026-10-12", "12:00", "20:00"],      // 3  sobrepõe turno que já existe no banco
-            ["ana@turnosync.dev", "2026-10-13", "12:00", "18:00"],      // 4  sobrepõe a linha 2 do próprio arquivo
-            ["ana@turnosync.dev", "2026-10-13", "16:00", "20:00"],      // 5  encosta na linha 2: permitido
-            ["joao@turnosync.dev", "2026-10-13", "08:00", "16:00"],     // 6  mesmo horário, outro colaborador: permitido
-            ["nobody@turnosync.dev", "2026-10-13", "08:00", "16:00"],   // 7  colaborador inexistente
-            ["ana@turnosync.dev", "13/10/2026", "08:00", "16:00"],      // 8  data ilegível
-            ["ana@turnosync.dev", "2026-10-14", "08:00", "08:00"],      // 9  início = fim
-            [null, "2026-10-14", "08:00", "16:00"],                     // 10 sem e-mail
-            ["ana@turnosync.dev", "2026-10-14", "25:00", "16:00"],      // 11 hora ilegível
-            ["ana@turnosync.dev", "2026-10-15", null, "16:00"]);        // 12 hora de início em branco
+            ["ana@turnosync.dev", "2026-10-12", "12:00", "20:00"],      // 3  overlaps a shift that already exists in the database
+            ["ana@turnosync.dev", "2026-10-13", "12:00", "18:00"],      // 4  overlaps row 2 of the same file
+            ["ana@turnosync.dev", "2026-10-13", "16:00", "20:00"],      // 5  touches row 2: allowed
+            ["joao@turnosync.dev", "2026-10-13", "08:00", "16:00"],     // 6  same time, different collaborator: allowed
+            ["nobody@turnosync.dev", "2026-10-13", "08:00", "16:00"],   // 7  unknown collaborator
+            ["ana@turnosync.dev", "13/10/2026", "08:00", "16:00"],      // 8  unreadable date
+            ["ana@turnosync.dev", "2026-10-14", "08:00", "08:00"],      // 9  start = end
+            [null, "2026-10-14", "08:00", "16:00"],                     // 10 no email
+            ["ana@turnosync.dev", "2026-10-14", "25:00", "16:00"],      // 11 unreadable time
+            ["ana@turnosync.dev", "2026-10-15", null, "16:00"]);        // 12 blank start time
 
         var report = await ImportOkAsync(file);
 
@@ -95,7 +95,7 @@ public sealed class ShiftImportServiceTests : IDisposable
         Assert.Null(failed[10].Email);
         Assert.Equal("ana@turnosync.dev", failed[3].Email);
 
-        // Só as linhas aceitas foram gravadas (mais o turno que já existia).
+        // Only the accepted rows were saved (plus the shift that already existed).
         Assert.Equal(
             [
                 (1, new DateOnly(2026, 10, 12), new TimeOnly(8, 0), new TimeOnly(16, 0)),
@@ -145,10 +145,10 @@ public sealed class ShiftImportServiceTests : IDisposable
     {
         await SeedShiftAsync(1, new DateOnly(2026, 10, 12), "22:00", "06:00");
         var file = SheetBuilder.Standard(
-            ["ana@turnosync.dev", "2026-10-13", "05:00", "09:00"],  // 2 invade o fim do noturno que está no banco
-            ["ana@turnosync.dev", "2026-10-13", "06:00", "10:00"],  // 3 começa quando o noturno termina: permitido
-            ["ana@turnosync.dev", "2026-10-13", "22:00", "06:00"],  // 4 noturno do dia 13: permitido
-            ["ana@turnosync.dev", "2026-10-14", "02:00", "04:00"]); // 5 cai dentro do noturno da linha 4
+            ["ana@turnosync.dev", "2026-10-13", "05:00", "09:00"],  // 2 reaches into the end of the overnight shift in the database
+            ["ana@turnosync.dev", "2026-10-13", "06:00", "10:00"],  // 3 starts when the overnight shift ends: allowed
+            ["ana@turnosync.dev", "2026-10-13", "22:00", "06:00"],  // 4 overnight shift of the 13th: allowed
+            ["ana@turnosync.dev", "2026-10-14", "02:00", "04:00"]); // 5 falls inside the overnight shift of row 4
 
         var report = await ImportOkAsync(file);
 

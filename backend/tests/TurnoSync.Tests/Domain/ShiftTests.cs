@@ -52,11 +52,11 @@ public sealed class ShiftTests
     }
 
     [Theory]
-    [InlineData("08:00", "16:00", "12:00", "20:00")] // sobreposição parcial no fim do existente
-    [InlineData("08:00", "16:00", "06:00", "10:00")] // sobreposição parcial no início do existente
-    [InlineData("08:00", "16:00", "10:00", "12:00")] // novo contido no existente
-    [InlineData("08:00", "16:00", "06:00", "18:00")] // novo contém o existente
-    [InlineData("08:00", "16:00", "08:00", "16:00")] // idênticos
+    [InlineData("08:00", "16:00", "12:00", "20:00")] // partial overlap at the end of the existing one
+    [InlineData("08:00", "16:00", "06:00", "10:00")] // partial overlap at the start of the existing one
+    [InlineData("08:00", "16:00", "10:00", "12:00")] // new one contained in the existing one
+    [InlineData("08:00", "16:00", "06:00", "18:00")] // new one contains the existing one
+    [InlineData("08:00", "16:00", "08:00", "16:00")] // identical
     public void Overlaps_ShouldBeTrue_WhenRangesIntersect(string start, string end, string otherStart, string otherEnd)
     {
         var existing = ShiftOf(start, end);
@@ -67,9 +67,9 @@ public sealed class ShiftTests
     }
 
     [Theory]
-    [InlineData("08:00", "12:00", "12:00", "16:00")] // encostados: fim do primeiro = início do segundo
-    [InlineData("12:00", "16:00", "08:00", "12:00")] // encostados na ordem inversa
-    [InlineData("08:00", "10:00", "14:00", "18:00")] // separados no mesmo dia
+    [InlineData("08:00", "12:00", "12:00", "16:00")] // touching: end of the first = start of the second
+    [InlineData("12:00", "16:00", "08:00", "12:00")] // touching, in reverse order
+    [InlineData("08:00", "10:00", "14:00", "18:00")] // apart on the same day
     public void Overlaps_ShouldBeFalse_WhenRangesOnlyTouchOrAreApart(
         string start, string end, string otherStart, string otherEnd)
     {

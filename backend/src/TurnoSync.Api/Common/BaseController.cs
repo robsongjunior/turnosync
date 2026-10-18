@@ -7,7 +7,7 @@ namespace TurnoSync.Api.Common;
 [Produces("application/json")]
 public abstract class BaseController : ControllerBase
 {
-    /// <summary>Converte o resultado do service em resposta HTTP; erros viram ProblemDetails.</summary>
+    /// <summary>Maps a service result to an HTTP response; errors become ProblemDetails.</summary>
     protected IActionResult HandleResult<T>(Result<T> result, Func<T, IActionResult>? onSuccess = null)
     {
         if (!result.IsSuccess)

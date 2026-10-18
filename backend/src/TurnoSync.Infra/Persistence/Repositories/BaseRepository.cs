@@ -9,7 +9,7 @@ public abstract class BaseRepository<T>(TurnoSyncContext context) : IRepository<
 {
     protected TurnoSyncContext Context { get; } = context;
 
-    // FirstOrDefault e não Find: o Find ignora o query filter do soft delete.
+    // FirstOrDefault and not Find: Find ignores the soft-delete query filter.
     public Task<T?> GetByIdAsync(int id, CancellationToken ct = default) =>
         Context.Set<T>().FirstOrDefaultAsync(e => e.Id == id, ct);
 

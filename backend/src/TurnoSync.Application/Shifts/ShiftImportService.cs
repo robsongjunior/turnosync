@@ -16,8 +16,8 @@ public sealed class ShiftImportService(
     private const string XlsxExtension = ".xlsx";
 
     /// <summary>
-    /// Valida a planilha linha a linha. As linhas válidas entram (um único SaveChanges, atômico) e as
-    /// inválidas voltam no informe com o motivo. Uma linha que falha não impede as demais.
+    /// Validates the spreadsheet row by row. Valid rows are imported (a single, atomic SaveChanges) and
+    /// invalid ones come back in the report with the reason. A failing row does not stop the others.
     /// </summary>
     public async Task<Result<ShiftImportReport>> ImportAsync(string fileName, Stream content, CancellationToken ct = default)
     {
@@ -83,13 +83,13 @@ public sealed class ShiftImportService(
             reasons.Add($"No collaborator found with the email '{row.Email.Trim()}'.");
         }
 
-        // Células ilegíveis já foram explicadas pela planilha; validar de novo repetiria o problema.
+        // Unreadable cells were already explained by the spreadsheet; validating again would repeat the problem.
         if (row.Errors.Count == 0)
         {
             var request = new ShiftRequest(collaborator?.Id, row.Date, row.StartTime, row.EndTime);
             var validation = await validator.ValidateAsync(request, ct);
 
-            // Sem colaborador, o motivo já é o e-mail; não acrescenta "CollaboratorId vazio".
+            // Without a collaborator the reason is already the email; do not add "CollaboratorId empty".
             reasons.AddRange(validation.Errors
                 .Where(e => collaborator is not null || e.PropertyName != nameof(ShiftRequest.CollaboratorId))
                 .Select(e => e.ErrorMessage));
@@ -102,7 +102,7 @@ public sealed class ShiftImportService(
 
         var shift = Shift.Create(collaborator!.Id, row.Date!.Value, row.StartTime!.Value, row.EndTime!.Value);
 
-        // A mesma regra da API (Shift.Overlaps): contra o banco e contra as linhas já aceitas do arquivo.
+        // The same rule as the API (Shift.Overlaps): against the database and against the rows already accepted from the file.
         if (existingByCollaborator.TryGetValue(collaborator.Id, out var existing)
             && existing.FirstOrDefault(shift.Overlaps) is { } clash)
         {
@@ -135,7 +135,7 @@ public sealed class ShiftImportService(
         return (await collaborators.GetByEmailsAsync(emails, ct)).ToDictionary(c => c.Email);
     }
 
-    /// <summary>Uma consulta por colaborador, cobrindo a faixa de datas das linhas dele (±1 dia por causa dos turnos noturnos).</summary>
+    /// <summary>One query per collaborator, covering the date range of their rows (±1 day because of overnight shifts).</summary>
     private async Task<Dictionary<int, IReadOnlyList<Shift>>> LoadExistingShiftsAsync(
         IReadOnlyList<ShiftSheetRow> rows, Dictionary<string, Collaborator> collaboratorsByEmail, CancellationToken ct)
     {

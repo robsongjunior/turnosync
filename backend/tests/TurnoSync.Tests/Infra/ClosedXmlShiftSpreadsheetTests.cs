@@ -82,7 +82,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
         Assert.Equal(new DateOnly(2026, 10, 12), rows[0].Date);
         Assert.Equal(new TimeOnly(8, 0), rows[0].StartTime);
         Assert.Equal(new TimeOnly(8, 30), rows[1].StartTime);
-        Assert.Equal(new TimeOnly(17, 15), rows[1].EndTime); // segundos descartados
+        Assert.Equal(new TimeOnly(17, 15), rows[1].EndTime); // seconds discarded
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
             ["joao@turnosync.dev", new DateTime(2026, 10, 13, 15, 45, 0), new DateTime(2026, 10, 13, 9, 15, 0), new DateTime(2026, 10, 13, 17, 0, 0)]));
 
         Assert.Equal((new DateOnly(2026, 10, 12), new TimeOnly(8, 0), new TimeOnly(16, 30)), (rows[0].Date!.Value, rows[0].StartTime!.Value, rows[0].EndTime!.Value));
-        Assert.Equal(new DateOnly(2026, 10, 13), rows[1].Date); // a parte de hora da data é ignorada
+        Assert.Equal(new DateOnly(2026, 10, 13), rows[1].Date); // the time part of the date is ignored
         Assert.Equal(new TimeOnly(9, 15), rows[1].StartTime);
     }
 
@@ -106,7 +106,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
     [InlineData(23, 59)]
     public void Read_ShouldNotLoseAMinute_WhenTimeIsAFractionOfTheDay(int hour, int minute)
     {
-        // É assim que o Excel guarda hora: a fração binária de 1/3 etc. gera ruído de ponto flutuante.
+        // This is how Excel stores time: binary fractions of 1/3 etc. bring floating-point noise.
         var fraction = (hour * 60 + minute) / 1440.0;
         var file = SheetBuilder.Standard(["ana@turnosync.dev", new DateOnly(2026, 10, 12).ToDateTime(TimeOnly.MinValue).ToOADate(), fraction, fraction]);
 

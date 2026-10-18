@@ -5,7 +5,7 @@ namespace TurnoSync.Domain.Shifts;
 
 public sealed class Shift : BaseEntity
 {
-    // Usado pelo EF Core; a criacao passa por Create.
+    // Used by EF Core; creation goes through Create.
     private Shift()
     {
     }
@@ -20,12 +20,12 @@ public sealed class Shift : BaseEntity
 
     public TimeOnly EndTime { get; private set; }
 
-    /// <summary>Inicio absoluto do turno (Date + StartTime).</summary>
+    /// <summary>Absolute start of the shift (Date + StartTime).</summary>
     public DateTime StartsAt { get; private set; }
 
     /// <summary>
-    /// Fim absoluto do turno. Se EndTime for menor que StartTime, o turno atravessa a
-    /// meia-noite e termina no dia seguinte.
+    /// Absolute end of the shift. If EndTime is earlier than StartTime, the shift crosses
+    /// midnight and ends the next day.
     /// </summary>
     public DateTime EndsAt { get; private set; }
 
@@ -38,7 +38,7 @@ public sealed class Shift : BaseEntity
 
     public void Update(int collaboratorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
     {
-        // O validator barra isso antes (erro de negocio); aqui so protegemos a invariante.
+        // The validator rejects this earlier (a business error); here we only protect the invariant.
         if (startTime == endTime)
         {
             throw new ArgumentException("A shift cannot start and end at the same time.", nameof(endTime));
@@ -53,8 +53,8 @@ public sealed class Shift : BaseEntity
     }
 
     /// <summary>
-    /// A regra de sobreposicao do sistema: mesmo colaborador e intervalos [inicio, fim) que se
-    /// cruzam. Turnos encostados (08-12 e 12-16) nao se sobrepoem.
+    /// The system's overlap rule: same collaborator and intersecting [start, end) intervals.
+    /// Shifts that merely touch (08-12 and 12-16) do not overlap.
     /// </summary>
     public bool Overlaps(Shift other)
     {

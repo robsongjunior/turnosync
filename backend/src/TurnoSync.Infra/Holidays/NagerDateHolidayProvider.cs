@@ -8,8 +8,8 @@ using TurnoSync.Application.Holidays;
 namespace TurnoSync.Infra.Holidays;
 
 /// <summary>
-/// Feriados nacionais via Nager.Date. Resultados são cacheados por (país, ano); falhas nunca são
-/// cacheadas e viram <c>null</c> ("desconhecido") em vez de exceção.
+/// National public holidays via Nager.Date. Results are cached per (country, year); failures are never
+/// cached and become <c>null</c> ("unknown") instead of an exception.
 /// </summary>
 public sealed class NagerDateHolidayProvider(
     HttpClient httpClient,
@@ -33,7 +33,7 @@ public sealed class NagerDateHolidayProvider(
         {
             using var response = await httpClient.GetAsync($"api/v3/PublicHolidays/{year}/{countryCode}", ct);
 
-            // País que a Nager não suporta: sem feriados, sem erro.
+            // A country Nager does not support: no holidays, no error.
             if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
             {
                 return Cache(cacheKey, new HashSet<DateOnly>());
@@ -43,12 +43,12 @@ public sealed class NagerDateHolidayProvider(
 
             var holidays = await response.Content.ReadFromJsonAsync<List<NagerHoliday>>(JsonOptions, ct) ?? [];
 
-            // Só feriados nacionais: o colaborador não tem região, então os regionais não se aplicam.
+            // National holidays only: the collaborator has no region, so regional ones do not apply.
             return Cache(cacheKey, holidays.Where(h => h.Global).Select(h => h.Date).ToHashSet());
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            // Rede, timeout, 5xx, circuito aberto ou JSON inesperado: a listagem segue sem a marcação.
+            // Network, timeout, 5xx, open circuit or unexpected JSON: the listing carries on without the flag.
             logger.LogWarning(ex, "Could not load public holidays for {CountryCode} {Year}", countryCode, year);
             return null;
         }

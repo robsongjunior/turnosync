@@ -17,8 +17,8 @@ public static class InfraServicesRegistration
 {
     public const string ConnectionStringName = "TurnoSync";
 
-    // Banco em memória com cache compartilhado: todo DbContext enxerga o mesmo banco.
-    // Para persistir em arquivo basta trocar por, por exemplo, "Data Source=/data/turnosync.db".
+    // In-memory database with a shared cache: every DbContext sees the same database.
+    // To persist to a file, just replace it with, for example, "Data Source=/data/turnosync.db".
     public const string DefaultConnectionString = "Data Source=TurnoSync;Mode=Memory;Cache=Shared";
 
     public const string NagerBaseUrlKey = "Nager:BaseUrl";
@@ -26,18 +26,18 @@ public static class InfraServicesRegistration
 
     public static IServiceCollection AddInfra(this IServiceCollection services)
     {
-        // Uma conexão singleton fica aberta só para manter o banco em memória vivo enquanto a API estiver de pé.
+        // A singleton connection stays open only to keep the in-memory database alive while the API is up.
         services.AddSingleton(sp => OpenKeepAliveConnection(GetConnectionString(sp)));
 
         services.AddDbContext<TurnoSyncContext>((sp, options) =>
         {
-            // Garante que a conexão keep-alive existe antes de qualquer DbContext abrir a própria.
+            // Make sure the keep-alive connection exists before any DbContext opens its own.
             _ = sp.GetRequiredService<SqliteConnection>();
 
             options
                 .UseSqlite(GetConnectionString(sp))
                 .UseSnakeCaseNamingConvention()
-                // Shift e Collaborator têm query filter de soft delete e são excluídos juntos (cascata no service).
+                // Shift and Collaborator have a soft-delete query filter and are deleted together (cascade in the service).
                 .ConfigureWarnings(w => w.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
         });
 
@@ -51,8 +51,8 @@ public static class InfraServicesRegistration
     }
 
     /// <summary>
-    /// Cliente tipado da Nager.Date com cache em memória e resiliência: timeout total de 5s,
-    /// 2s por tentativa e 1 retry, para que uma API externa lenta ou fora do ar não trave a listagem.
+    /// Typed Nager.Date client with an in-memory cache and resilience: 5s total timeout,
+    /// 2s per attempt and 1 retry, so a slow or unavailable external API cannot hang the listing.
     /// </summary>
     public static IHttpClientBuilder AddNagerDateHolidays(this IServiceCollection services)
     {
@@ -67,14 +67,14 @@ public static class InfraServicesRegistration
             options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(5);
             options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(2);
             options.Retry.MaxRetryAttempts = 1;
-            // O padrão (2s) estouraria o timeout total antes da segunda tentativa começar.
+            // The default (2s) would blow the total timeout before the second attempt even starts.
             options.Retry.Delay = TimeSpan.FromMilliseconds(500);
         });
 
         return httpClient;
     }
 
-    /// <summary>Aplica as migrations (e o seed de colaboradores) no startup.</summary>
+    /// <summary>Applies the migrations (and the collaborator seed) at startup.</summary>
     public static void MigrateDatabase(this IServiceProvider services)
     {
         using var scope = services.CreateScope();

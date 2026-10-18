@@ -54,11 +54,11 @@ public sealed class ShiftsApiTests : IDisposable
     }
 
     [Theory]
-    [InlineData("12:00", "20:00")] // sobreposição parcial no fim
-    [InlineData("06:00", "10:00")] // sobreposição parcial no início
-    [InlineData("10:00", "12:00")] // contido
-    [InlineData("06:00", "18:00")] // contém
-    [InlineData("08:00", "16:00")] // idêntico
+    [InlineData("12:00", "20:00")] // partial overlap at the end
+    [InlineData("06:00", "10:00")] // partial overlap at the start
+    [InlineData("10:00", "12:00")] // contained
+    [InlineData("06:00", "18:00")] // contains
+    [InlineData("08:00", "16:00")] // identical
     public async Task Create_ShouldReturn409_WhenOverlapsAnExistingShiftOfTheSameCollaborator(string start, string end)
     {
         await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");

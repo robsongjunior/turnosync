@@ -15,13 +15,13 @@ internal sealed class CollaboratorConfiguration : IEntityTypeConfiguration<Colla
         builder.Property(c => c.Email).IsRequired().HasMaxLength(254);
         builder.Property(c => c.CountryCode).IsRequired().HasMaxLength(2);
 
-        // E-mail único entre os não excluídos: a importação identifica o colaborador por ele.
-        // O service checa antes para devolver 409; o índice é a rede de segurança.
+        // Email is unique among non-deleted collaborators: the import identifies the collaborator by it.
+        // The service checks first to return 409; the index is the safety net.
         builder.HasIndex(c => c.Email).IsUnique().HasFilter("is_deleted = 0");
 
         builder.HasQueryFilter(c => !c.IsDeleted);
 
-        // Sem o seed não haveria como criar o primeiro turno pela interface (não há tela de colaboradores).
+        // Without the seed there would be no way to create the first shift from the UI (there is no collaborators screen).
         builder.HasData(
             new { Id = 1, Name = "Ana Torres", Email = "ana@turnosync.dev", CountryCode = "ES", IsDeleted = false },
             new { Id = 2, Name = "João Lima", Email = "joao@turnosync.dev", CountryCode = "BR", IsDeleted = false },
