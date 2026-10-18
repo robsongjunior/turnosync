@@ -17,9 +17,9 @@ frontend/.vscode/
 .idea/
 .vscode/
 
-# OS
+# Sistema operativo
 .DS_Store
 Thumbs.db
 
-# Angular build copied into the API (generated, not versioned)
+# Build de Angular copiado a la API (generado, no se versiona)
 backend/src/TurnoSync.Api/wwwroot/

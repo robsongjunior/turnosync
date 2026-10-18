@@ -58,7 +58,7 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 | 6 | Festivos del país del colaborador (API externa) | Nager.Date; `isHoliday` en el listado; si la API falla, `isHoliday: null` y `holidaysAvailable: false` |
 | 7 | Base de datos relacional | SQLite en memoria vía EF Core (con migraciones) |
 | 8 | `docker-compose up` | Un servicio `app` (API + Angular) |
-| 9 | OpenAPI/Swagger | Swashbuckle en `/swagger`, con descripciones tomadas de los comentarios XML |
+| 9 | OpenAPI/Swagger | Swashbuckle en `/swagger`, con descripciones en español tomadas de los comentarios XML |
 | 10 | Pruebas automatizadas | xUnit; ver [Pruebas](#pruebas) |
 | 11 | README | Este documento |
 
@@ -77,9 +77,10 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 | `PUT /api/shifts/{id}` | Actualiza | 200 · 400 · 404 · 409 |
 | `DELETE /api/shifts/{id}` | Borrado lógico | 204 · 404 |
 | `POST /api/shifts/import` | Sube un `.xlsx` (multipart, campo `file`) y devuelve el informe | 200 · 400 |
-| `GET /api/shifts/export?from=&to=` | Descarga un `.xlsx` (`from` y `to` obligatorios, `yyyy-MM-dd`) | 200 · 400 |
+| `GET /api/shifts/export?from=&to=` | Descarga un `.xlsx` llamado `turnos_{from}_{to}.xlsx` (`from` y `to` obligatorios, `yyyy-MM-dd`) | 200 · 400 |
 
-Los errores siguen el estándar `ProblemDetails` / `ValidationProblemDetails` de ASP.NET Core. Los mensajes están en inglés.
+Los errores siguen el estándar `ProblemDetails` / `ValidationProblemDetails` de ASP.NET Core. Los mensajes están en español,
+también los que genera el propio framework (cuerpo vacío, JSON mal formado, valor no válido…).
 
 Ejemplo de turno en el listado (`GET /api/shifts`):
 
@@ -104,7 +105,7 @@ El informe de importación indica el número de fila de la hoja y todos los moti
 ```json
 {
   "imported": [{ "row": 2, "email": "ana@turnosync.dev" }],
-  "failed":   [{ "row": 5, "email": "x@y.com", "reasons": ["Overlaps row 3."] }]
+  "failed":   [{ "row": 5, "email": "x@y.com", "reasons": ["Se solapa con la fila 3."] }]
 }
 ```
 
@@ -133,6 +134,11 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
   1 reintento) y caché en memoria de 24 h por (país, año). **Un fallo nunca se cachea ni rompe el listado**: se registra un aviso y los
   turnos de ese país salen con `isHoliday: null` ("desconocido", distinto de "no es festivo"). La interfaz lo muestra con un aviso
   y un `?`. Una consulta por (país, año) presente en el listado, en paralelo.
+- **Idioma.** Los identificadores del código y de la base de datos van en inglés; los comentarios, los mensajes de error (de
+  la API y de la interfaz) y la propia interfaz, en español. Los validadores y los servicios ya redactan sus mensajes en español.
+  Los que genera ASP.NET Core (cuerpo vacío, valores no válidos, títulos de `ProblemDetails`) y `System.Text.Json` (que además
+  nombra tipos internos de .NET) los sustituye `SpanishErrorMessages`, así ninguna respuesta de error de la API sale en otro idioma.
+  El idioma está fijado en el código: no hay i18n.
 - **Calidad del código.** `Directory.Build.props` (`net9.0`, nullable, advertencias como errores) y un `.editorconfig` basado en las
   guías de Microsoft (Framework Design Guidelines, C# Coding Conventions, reglas de nombres e IDExxxx) que se aplica en el *build*.
 - **Frontend mínimo.** Angular 22 con componentes *standalone*, *signals*, sin zone.js, Reactive Forms, sin librería de UI y sin
@@ -181,7 +187,7 @@ xUnit + NSubstitute + `WebApplicationFactory`. Se prioriza la calidad sobre la c
 
 - **Dominio:** `Shift` (cálculo de `StartsAt`/`EndsAt`, nocturnos, y todos los casos límite de `Overlaps`: parcial al inicio y al fin, contenido,
   que contiene, idéntico, turnos que se tocan, mismo horario con distinto colaborador, nocturno contra turno del día siguiente) y `Collaborator`.
-- **Validators:** campos obligatorios, email, país ISO, inicio ≠ fin, medianoche como hora válida.
+- **Validators:** campos obligatorios, email, país ISO, inicio ≠ fin, medianoche como hora válida y el texto exacto de cada mensaje (en español).
 - **Importación:** archivo mixto con planilla generada en memoria sobre SQLite real (filas válidas e inválidas, solapamiento con la base de datos y
   dentro del propio archivo, email desconocido, celdas ilegibles, varios motivos por fila, turnos borrados que no bloquean, nocturnos).
 - **Excel:** ida y vuelta exacta, celdas nativas y de texto, tiempos como fracción del día (ruido de punto flotante), columnas en cualquier orden,
@@ -189,7 +195,8 @@ xUnit + NSubstitute + `WebApplicationFactory`. Se prioriza la calidad sobre la c
 - **Festivos:** `HttpMessageHandler` falso (éxito, 404/204, fallo de red, JSON inválido, festivo regional ignorado, caché, el fallo no se cachea,
   cancelación) y el *pipeline* real de resiliencia (reintento, tope de reintentos, timeout cuando la API nunca responde).
 - **Integración (API completa en memoria):** 409 por solapamiento en POST y PUT, borrado lógico, extremos inclusivos de la exportación, `from > to`,
-  falla de festivos en un solo país, reimportación del archivo exportado, errores en inglés, Swagger y 500 sin filtrar detalles.
+  falla de festivos en un solo país, reimportación del archivo exportado, errores en español (también los del framework: cuerpo vacío,
+  JSON mal formado, valor no válido, 415), Swagger en español y 500 sin filtrar detalles.
 
 No hay pruebas automatizadas del frontend: la regla de negocio está toda en el backend y el enunciado deja la elección de las pruebas más relevantes.
 El frontend se verificó a mano (crear, editar, 409, importar, exportar y fallo de Nager.Date).
@@ -199,7 +206,7 @@ El frontend se verificó a mano (crear, editar, 409, importar, exportar y fallo 
 - **Pantalla de colaboradores y borrado de turnos desde la interfaz:** existen en la API y en Swagger; el enunciado pide solo el listado, el formulario,
   importar y exportar.
 - **Filtros, paginación y orden elegido por el usuario:** el listado se devuelve en orden fijo (inicio del turno y luego nombre).
-- **Autenticación y autorización**, i18n y pruebas del frontend.
+- **Autenticación y autorización**, i18n (la aplicación solo está en español) y pruebas del frontend.
 - **Concurrencia entre dos peticiones simultáneas:** el servicio comprueba el solapamiento y luego guarda; entre ambos pasos puede colarse otra
   petición. En producción se resolvería con una *exclusion constraint* (PostgreSQL) o una transacción serializable.
 - **Límite propio de tamaño de archivo o de filas en la importación:** rige el límite por defecto de ASP.NET Core.
@@ -210,6 +217,7 @@ El frontend se verificó a mano (crear, editar, 409, importar, exportar y fallo 
 
 - Mientras Nager.Date no responda, **cada listado espera hasta ~5 s**, porque los fallos no se cachean (así la siguiente carga lo reintenta).
   Una mejora sería una caché negativa corta o un *circuit breaker* con umbral más bajo.
+- Los logs de las librerías (ASP.NET Core, Polly, EF Core) salen en inglés; los mensajes que escribe la propia aplicación, en español.
 - La validación del país usa `RegionInfo`, que necesita datos de globalización (ICU). Las imágenes Debian de .NET lo incluyen; en un entorno con
   `InvariantGlobalization` rechazaría todos los países (las pruebas fallarían de inmediato, así que se detectaría).
 

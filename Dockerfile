@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# ---- web: production build of the Angular app ----
+# ---- web: build de producción de la app Angular ----
 FROM node:22 AS web
 ENV NG_CLI_ANALYTICS=false
 WORKDIR /src/frontend
@@ -9,7 +9,7 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-# ---- build: restore (layer-cached) and copy the backend source ----
+# ---- build: restaurar paquetes (capa en caché) y copiar el código del backend ----
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src/backend
 COPY backend/TurnoSync.slnx backend/Directory.Build.props backend/.editorconfig ./
@@ -25,11 +25,11 @@ COPY backend/ ./
 FROM build AS test
 ENTRYPOINT ["dotnet", "test", "TurnoSync.slnx", "--no-restore"]
 
-# ---- publish: the API in Release ----
+# ---- publish: la API en Release ----
 FROM build AS publish
 RUN dotnet publish src/TurnoSync.Api/TurnoSync.Api.csproj -c Release -o /app/publish --no-restore
 
-# ---- final: API + Angular in wwwroot, on port 8080 ----
+# ---- final: API + Angular en wwwroot, en el puerto 8080 ----
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish ./
