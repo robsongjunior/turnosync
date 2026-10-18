@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace TurnoSync.Api.Common;
 
-/// <summary>Safety net for the unexpected: a 500 ProblemDetails with no stack trace.</summary>
+/// <summary>Red de seguridad para lo inesperado: un ProblemDetails 500 sin stack trace.</summary>
 public sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
     IProblemDetailsService problemDetailsService) : IExceptionHandler
@@ -12,14 +12,14 @@ public sealed class GlobalExceptionHandler(
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        // Client request failures (e.g. a body that is too large) are not server errors.
+        // Los fallos de la solicitud del cliente (por ejemplo, un cuerpo demasiado grande) no son errores del servidor.
         var status = exception is BadHttpRequestException badRequest
             ? badRequest.StatusCode
             : StatusCodes.Status500InternalServerError;
 
         if (status >= StatusCodes.Status500InternalServerError)
         {
-            logger.LogError(exception, "Unhandled exception on {Method} {Path}",
+            logger.LogError(exception, "Excepción no controlada en {Method} {Path}",
                 httpContext.Request.Method, httpContext.Request.Path);
         }
 
@@ -32,8 +32,8 @@ public sealed class GlobalExceptionHandler(
             {
                 Status = status,
                 Title = status >= StatusCodes.Status500InternalServerError
-                    ? "An unexpected error occurred."
-                    : "The request could not be processed.",
+                    ? SpanishErrorMessages.UnexpectedErrorTitle
+                    : "No se pudo procesar la solicitud.",
             },
         });
     }

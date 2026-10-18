@@ -50,7 +50,8 @@ public sealed class CollaboratorsApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Contains("ana@turnosync.dev", problem!.Detail);
+        Assert.Equal("Conflicto", problem!.Title);
+        Assert.Equal("Ya existe un colaborador con el email 'ana@turnosync.dev'.", problem.Detail);
     }
 
     [Fact]
@@ -64,12 +65,13 @@ public sealed class CollaboratorsApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_ShouldReturnErrorsInEnglish()
+    public async Task Create_ShouldReturnErrorsInSpanish()
     {
         var response = await PostAsync("", "ana@turnosync.dev", "ES");
 
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-        Assert.Contains("must not be empty", problem!.Errors["name"][0]);
+        Assert.Equal("Se han producido uno o más errores de validación.", problem!.Title);
+        Assert.Equal(["El nombre es obligatorio."], problem.Errors["name"]);
     }
 
     [Fact]
@@ -78,6 +80,9 @@ public sealed class CollaboratorsApiTests : IDisposable
         var response = await _client.GetAsync("/api/collaborators/999");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("No encontrado", problem!.Title);
+        Assert.Equal("No se encontró el colaborador 999.", problem.Detail);
     }
 
     [Fact]

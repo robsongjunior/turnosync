@@ -3,10 +3,10 @@ using TurnoSync.Application.Common;
 namespace TurnoSync.Application.Shifts;
 
 /// <summary>
-/// A data row of the spreadsheet, already converted. Cells that could not be read (invalid date or time)
-/// come as null and are explained in <see cref="Errors"/>.
+/// Una fila de datos de la hoja de cálculo, ya convertida. Las celdas que no se pudieron leer (fecha u hora
+/// no válidas) llegan como null y se explican en <see cref="Errors"/>.
 /// </summary>
-/// <param name="RowNumber">Row number in the sheet (the first data row is 2).</param>
+/// <param name="RowNumber">Número de fila en la hoja (la primera fila de datos es la 2).</param>
 public sealed record ShiftSheetRow(
     int RowNumber,
     string? Email,
@@ -18,17 +18,17 @@ public sealed record ShiftSheetRow(
 public sealed record ShiftExportRow(string Email, DateOnly Date, TimeOnly StartTime, TimeOnly EndTime);
 
 /// <summary>
-/// Reads and writes the shifts .xlsx. Columns: Email, Fecha, HoraInicio, HoraFin (those of the brief),
-/// the same for import and export.
+/// Lee y escribe el .xlsx de turnos. Columnas: Email, Fecha, HoraInicio, HoraFin (las del enunciado),
+/// las mismas para importar y exportar.
 /// </summary>
 public interface IShiftSpreadsheet
 {
     /// <summary>
-    /// Reads the first sheet, finding the headers by name (case-insensitive, in any order).
-    /// Blank rows are ignored. Fails if the file is not a valid .xlsx or columns are missing.
+    /// Lee la primera hoja y localiza los encabezados por nombre (sin distinguir mayúsculas, en cualquier orden).
+    /// Las filas en blanco se ignoran. Falla si el archivo no es un .xlsx válido o faltan columnas.
     /// </summary>
     Result<IReadOnlyList<ShiftSheetRow>> Read(Stream content);
 
-    /// <summary>Generates the .xlsx with date and time as native Excel cells.</summary>
+    /// <summary>Genera el .xlsx con la fecha y la hora como celdas nativas de Excel.</summary>
     byte[] Write(IEnumerable<ShiftExportRow> rows);
 }

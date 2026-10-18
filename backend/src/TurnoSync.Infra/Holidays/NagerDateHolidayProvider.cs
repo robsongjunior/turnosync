@@ -8,8 +8,8 @@ using TurnoSync.Application.Holidays;
 namespace TurnoSync.Infra.Holidays;
 
 /// <summary>
-/// National public holidays via Nager.Date. Results are cached per (country, year); failures are never
-/// cached and become <c>null</c> ("unknown") instead of an exception.
+/// Festivos nacionales a través de Nager.Date. Los resultados se cachean por (país, año); los fallos nunca se
+/// cachean y se convierten en <c>null</c> ("desconocido") en lugar de una excepción.
 /// </summary>
 public sealed class NagerDateHolidayProvider(
     HttpClient httpClient,
@@ -33,7 +33,7 @@ public sealed class NagerDateHolidayProvider(
         {
             using var response = await httpClient.GetAsync($"api/v3/PublicHolidays/{year}/{countryCode}", ct);
 
-            // A country Nager does not support: no holidays, no error.
+            // Un país que Nager no admite: sin festivos, sin error.
             if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
             {
                 return Cache(cacheKey, new HashSet<DateOnly>());
@@ -43,13 +43,13 @@ public sealed class NagerDateHolidayProvider(
 
             var holidays = await response.Content.ReadFromJsonAsync<List<NagerHoliday>>(JsonOptions, ct) ?? [];
 
-            // National holidays only: the collaborator has no region, so regional ones do not apply.
+            // Solo festivos nacionales: el colaborador no tiene región, así que los regionales no aplican.
             return Cache(cacheKey, holidays.Where(h => h.Global).Select(h => h.Date).ToHashSet());
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            // Network, timeout, 5xx, open circuit or unexpected JSON: the listing carries on without the flag.
-            logger.LogWarning(ex, "Could not load public holidays for {CountryCode} {Year}", countryCode, year);
+            // Red, timeout, 5xx, circuito abierto o JSON inesperado: el listado continúa sin la marca.
+            logger.LogWarning(ex, "No se pudieron cargar los festivos de {CountryCode} {Year}", countryCode, year);
             return null;
         }
     }

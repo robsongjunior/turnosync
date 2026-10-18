@@ -111,11 +111,11 @@ public sealed class PersistenceTests : IDisposable
         var repository = new ShiftRepository(context);
         repository.AddRange(
         [
-            Shift.Create(1, Day.AddDays(-1), new TimeOnly(8, 0), new TimeOnly(16, 0)), // outside (before)
-            Shift.Create(1, Day, new TimeOnly(8, 0), new TimeOnly(16, 0)),               // lower bound
-            Shift.Create(3, Day, new TimeOnly(8, 0), new TimeOnly(16, 0)),               // same start, name comes later
-            Shift.Create(2, Day.AddDays(2), new TimeOnly(8, 0), new TimeOnly(16, 0)),    // upper bound
-            Shift.Create(1, Day.AddDays(3), new TimeOnly(8, 0), new TimeOnly(16, 0)),    // outside (after)
+            Shift.Create(1, Day.AddDays(-1), new TimeOnly(8, 0), new TimeOnly(16, 0)), // fuera (antes)
+            Shift.Create(1, Day, new TimeOnly(8, 0), new TimeOnly(16, 0)),               // límite inferior
+            Shift.Create(3, Day, new TimeOnly(8, 0), new TimeOnly(16, 0)),               // mismo inicio, el nombre va después
+            Shift.Create(2, Day.AddDays(2), new TimeOnly(8, 0), new TimeOnly(16, 0)),    // límite superior
+            Shift.Create(1, Day.AddDays(3), new TimeOnly(8, 0), new TimeOnly(16, 0)),    // fuera (después)
         ]);
         await repository.SaveChangesAsync();
 

@@ -46,7 +46,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
             .ToList();
     }
 
-    // --- Import ---
+    // --- Importación ---
 
     [Fact]
     public async Task Import_ShouldReturn200WithTheReport_AndPersistTheAcceptedRows()
@@ -63,7 +63,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         Assert.Equal([2, 4], report!.Imported.Select(i => i.Row));
         var failed = Assert.Single(report.Failed);
         Assert.Equal(3, failed.Row);
-        Assert.Equal(["Overlaps row 2."], failed.Reasons);
+        Assert.Equal(["Se solapa con la fila 2."], failed.Reasons);
 
         var list = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
         Assert.Equal(2, list!.Items.Count);
@@ -89,7 +89,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-        Assert.Contains("file", problem!.Errors.Keys);
+        Assert.Equal(["Solo se admiten archivos .xlsx."], problem!.Errors["file"]);
     }
 
     [Fact]
@@ -113,21 +113,33 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Import_ShouldReturn400_WhenNoFileIsSent()
+    public async Task Import_ShouldReturn400_WhenTheFileFieldIsMissing()
+    {
+        using var form = new MultipartFormDataContent { { new StringContent("x"), "other" } };
+
+        var response = await _client.PostAsync("/api/shifts/import", form);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.Equal(["El archivo .xlsx es obligatorio."], problem!.Errors["file"]);
+    }
+
+    [Fact]
+    public async Task Import_ShouldReturn400_WhenTheMultipartIsEmpty()
     {
         var response = await _client.PostAsync("/api/shifts/import", new MultipartFormDataContent());
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    // --- Export ---
+    // --- Exportación ---
 
     [Fact]
     public async Task Export_ShouldIncludeBothEndsOfThePeriodAndExcludeOutsideAndDeletedShifts()
     {
         await CreateShiftAsync(1, "2026-10-11");
-        await CreateShiftAsync(1, "2026-10-12");                      // lower bound
-        await CreateShiftAsync(2, "2026-10-14", "22:00", "06:00");    // upper bound (overnight, by start date)
+        await CreateShiftAsync(1, "2026-10-12");                      // límite inferior
+        await CreateShiftAsync(2, "2026-10-14", "22:00", "06:00");    // límite superior (nocturno, por fecha de inicio)
         await CreateShiftAsync(1, "2026-10-15");
         await CreateShiftAsync(3, "2026-10-13");
         var deleted = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
@@ -137,7 +149,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(XlsxContentType, response.Content.Headers.ContentType!.MediaType);
-        Assert.Equal("shifts_2026-10-12_2026-10-14.xlsx", response.Content.Headers.ContentDisposition!.FileName);
+        Assert.Equal("turnos_2026-10-12_2026-10-14.xlsx", response.Content.Headers.ContentDisposition!.FileName);
         Assert.Equal(
             [
                 ["Email", "Fecha", "HoraInicio", "HoraFin"],
@@ -188,6 +200,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         Assert.Equal(["from"], problem!.Errors.Keys);
+        Assert.Equal(["El parámetro 'from' debe ser anterior o igual a 'to'."], problem.Errors["from"]);
     }
 
     [Theory]
@@ -201,6 +214,9 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         Assert.Equal(expectedFields.Split(','), problem!.Errors.Keys.Order());
+        Assert.All(
+            expectedFields.Split(','),
+            field => Assert.Equal([$"El parámetro '{field}' es obligatorio (yyyy-MM-dd)."], problem.Errors[field]));
     }
 
     [Fact]

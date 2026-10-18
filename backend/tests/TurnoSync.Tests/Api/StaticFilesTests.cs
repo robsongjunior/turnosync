@@ -5,7 +5,7 @@ using TurnoSync.Tests.Support;
 
 namespace TurnoSync.Tests.Api;
 
-/// <summary>The API serves the Angular build (wwwroot) from its own origin, with no SPA fallback.</summary>
+/// <summary>La API sirve el build de Angular (wwwroot) desde su propio origen, sin fallback de SPA.</summary>
 public sealed class StaticFilesTests : IDisposable
 {
     private readonly string _webRoot = Directory.CreateTempSubdirectory("turnosync-wwwroot-").FullName;

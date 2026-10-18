@@ -1,7 +1,7 @@
 namespace TurnoSync.Application.Shifts;
 
-// Nullable for the same reason as CollaboratorRequest. For values like TimeOnly this also
-// tells "missing" apart from 00:00, which is a valid time.
+// Anulables por la misma razón que CollaboratorRequest. En valores como TimeOnly, además,
+// permite distinguir "ausente" de 00:00, que es una hora válida.
 public sealed record ShiftRequest(int? CollaboratorId, DateOnly? Date, TimeOnly? StartTime, TimeOnly? EndTime);
 
 public sealed record ShiftResponse(
@@ -13,8 +13,8 @@ public sealed record ShiftResponse(
     TimeOnly EndTime);
 
 /// <summary>
-/// A shift in the listing. <see cref="IsHoliday"/> is <c>null</c> (unknown, not "false") when the holiday
-/// API failed for the collaborator's country.
+/// Un turno del listado. <see cref="IsHoliday"/> es <c>null</c> (desconocido, no "false") cuando la API de
+/// festivos falló para el país del colaborador.
 /// </summary>
 public sealed record ShiftListItem(
     int Id,
@@ -25,6 +25,6 @@ public sealed record ShiftListItem(
     TimeOnly EndTime,
     bool? IsHoliday);
 
-/// <param name="Items">Shifts in a fixed order: shift start, then collaborator name.</param>
-/// <param name="HolidaysAvailable">False if the holiday lookup failed for any country.</param>
+/// <param name="Items">Turnos en orden fijo: inicio del turno y luego nombre del colaborador.</param>
+/// <param name="HolidaysAvailable">False si la consulta de festivos falló para algún país.</param>
 public sealed record ShiftListResponse(IReadOnlyList<ShiftListItem> Items, bool HolidaysAvailable);

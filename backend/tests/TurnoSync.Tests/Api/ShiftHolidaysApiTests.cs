@@ -49,8 +49,8 @@ public sealed class ShiftHolidaysApiTests : IDisposable
     public async Task List_ShouldUseTheStartDate_WhenNightShiftCrossesIntoOrOutOfAHoliday()
     {
         _factory.Holidays.SetHolidays("ES", 2026, new DateOnly(2026, 10, 13));
-        await CreateShiftAsync(Ana, "2026-10-12", "22:00", "06:00"); // ends on the holiday, starts before it
-        await CreateShiftAsync(Ana, "2026-10-13", "22:00", "06:00"); // starts on the holiday
+        await CreateShiftAsync(Ana, "2026-10-12", "22:00", "06:00"); // termina en el festivo, empieza antes
+        await CreateShiftAsync(Ana, "2026-10-13", "22:00", "06:00"); // empieza en el festivo
 
         var list = await ListAsync();
 

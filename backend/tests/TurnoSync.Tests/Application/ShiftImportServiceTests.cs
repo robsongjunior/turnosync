@@ -10,8 +10,8 @@ using TurnoSync.Tests.Support;
 namespace TurnoSync.Tests.Application;
 
 /// <summary>
-/// Import with spreadsheets generated in memory, the real ClosedXML adapter and an in-memory SQLite
-/// created by the migrations. Seed collaborators: 1 Ana, 2 João, 3 Lucía, 4 Carlos, 5 Inês.
+/// Importación con hojas de cálculo generadas en memoria, el adaptador real de ClosedXML y un SQLite en memoria
+/// creado con las migraciones. Colaboradores iniciales: 1 Ana, 2 João, 3 Lucía, 4 Carlos, 5 Inês.
 /// </summary>
 public sealed class ShiftImportServiceTests : IDisposable
 {
@@ -64,17 +64,17 @@ public sealed class ShiftImportServiceTests : IDisposable
     {
         await SeedShiftAsync(1, new DateOnly(2026, 10, 12), "08:00", "16:00");
         var file = SheetBuilder.Standard(
-            ["ana@turnosync.dev", "2026-10-13", "08:00", "16:00"],      // 2  ok
-            ["ana@turnosync.dev", "2026-10-12", "12:00", "20:00"],      // 3  overlaps a shift that already exists in the database
-            ["ana@turnosync.dev", "2026-10-13", "12:00", "18:00"],      // 4  overlaps row 2 of the same file
-            ["ana@turnosync.dev", "2026-10-13", "16:00", "20:00"],      // 5  touches row 2: allowed
-            ["joao@turnosync.dev", "2026-10-13", "08:00", "16:00"],     // 6  same time, different collaborator: allowed
-            ["nobody@turnosync.dev", "2026-10-13", "08:00", "16:00"],   // 7  unknown collaborator
-            ["ana@turnosync.dev", "13/10/2026", "08:00", "16:00"],      // 8  unreadable date
-            ["ana@turnosync.dev", "2026-10-14", "08:00", "08:00"],      // 9  start = end
-            [null, "2026-10-14", "08:00", "16:00"],                     // 10 no email
-            ["ana@turnosync.dev", "2026-10-14", "25:00", "16:00"],      // 11 unreadable time
-            ["ana@turnosync.dev", "2026-10-15", null, "16:00"]);        // 12 blank start time
+            ["ana@turnosync.dev", "2026-10-13", "08:00", "16:00"],      // 2  correcta
+            ["ana@turnosync.dev", "2026-10-12", "12:00", "20:00"],      // 3  se solapa con un turno que ya existe en la base de datos
+            ["ana@turnosync.dev", "2026-10-13", "12:00", "18:00"],      // 4  se solapa con la fila 2 del mismo archivo
+            ["ana@turnosync.dev", "2026-10-13", "16:00", "20:00"],      // 5  toca la fila 2: permitido
+            ["joao@turnosync.dev", "2026-10-13", "08:00", "16:00"],     // 6  misma hora, otro colaborador: permitido
+            ["nobody@turnosync.dev", "2026-10-13", "08:00", "16:00"],   // 7  colaborador desconocido
+            ["ana@turnosync.dev", "13/10/2026", "08:00", "16:00"],      // 8  fecha ilegible
+            ["ana@turnosync.dev", "2026-10-14", "08:00", "08:00"],      // 9  inicio = fin
+            [null, "2026-10-14", "08:00", "16:00"],                     // 10 sin email
+            ["ana@turnosync.dev", "2026-10-14", "25:00", "16:00"],      // 11 hora ilegible
+            ["ana@turnosync.dev", "2026-10-15", null, "16:00"]);        // 12 hora de inicio en blanco
 
         var report = await ImportOkAsync(file);
 
@@ -83,19 +83,19 @@ public sealed class ShiftImportServiceTests : IDisposable
         Assert.Equal([3, 4, 7, 8, 9, 10, 11, 12], report.Failed.Select(f => f.Row));
 
         var failed = report.Failed.ToDictionary(f => f.Row);
-        Assert.Equal(["Overlaps an existing shift (2026-10-12 08:00-16:00)."], failed[3].Reasons);
-        Assert.Equal(["Overlaps row 2."], failed[4].Reasons);
-        Assert.Equal(["No collaborator found with the email 'nobody@turnosync.dev'."], failed[7].Reasons);
+        Assert.Equal(["Se solapa con un turno existente (2026-10-12 08:00-16:00)."], failed[3].Reasons);
+        Assert.Equal(["Se solapa con la fila 2."], failed[4].Reasons);
+        Assert.Equal(["No existe ningún colaborador con el email 'nobody@turnosync.dev'."], failed[7].Reasons);
         Assert.Single(failed[8].Reasons);
         Assert.StartsWith("Fecha: '13/10/2026'", failed[8].Reasons[0]);
-        Assert.Equal(["'End Time' must be different from 'Start Time'."], failed[9].Reasons);
-        Assert.Equal(["Email is required."], failed[10].Reasons);
+        Assert.Equal(["La hora de fin debe ser distinta de la hora de inicio."], failed[9].Reasons);
+        Assert.Equal(["El email es obligatorio."], failed[10].Reasons);
         Assert.StartsWith("HoraInicio: '25:00'", failed[11].Reasons.Single());
-        Assert.Equal(["'Start Time' must not be empty."], failed[12].Reasons);
+        Assert.Equal(["La hora de inicio es obligatoria."], failed[12].Reasons);
         Assert.Null(failed[10].Email);
         Assert.Equal("ana@turnosync.dev", failed[3].Email);
 
-        // Only the accepted rows were saved (plus the shift that already existed).
+        // Solo se guardaron las filas aceptadas (más el turno que ya existía).
         Assert.Equal(
             [
                 (1, new DateOnly(2026, 10, 12), new TimeOnly(8, 0), new TimeOnly(16, 0)),
@@ -114,7 +114,10 @@ public sealed class ShiftImportServiceTests : IDisposable
 
         var failed = Assert.Single(report.Failed);
         Assert.Equal(
-            ["No collaborator found with the email 'nobody@turnosync.dev'.", "'End Time' must be different from 'Start Time'."],
+            [
+                "No existe ningún colaborador con el email 'nobody@turnosync.dev'.",
+                "La hora de fin debe ser distinta de la hora de inicio.",
+            ],
             failed.Reasons);
     }
 
@@ -136,7 +139,7 @@ public sealed class ShiftImportServiceTests : IDisposable
             ["ana@turnosync.dev", "2026-10-13", "08:00", "16:00"]));
 
         Assert.Equal([2], report.Imported.Select(i => i.Row));
-        Assert.Equal(["Overlaps row 2."], Assert.Single(report.Failed).Reasons);
+        Assert.Equal(["Se solapa con la fila 2."], Assert.Single(report.Failed).Reasons);
         Assert.Single(await StoredShiftsAsync());
     }
 
@@ -145,16 +148,16 @@ public sealed class ShiftImportServiceTests : IDisposable
     {
         await SeedShiftAsync(1, new DateOnly(2026, 10, 12), "22:00", "06:00");
         var file = SheetBuilder.Standard(
-            ["ana@turnosync.dev", "2026-10-13", "05:00", "09:00"],  // 2 reaches into the end of the overnight shift in the database
-            ["ana@turnosync.dev", "2026-10-13", "06:00", "10:00"],  // 3 starts when the overnight shift ends: allowed
-            ["ana@turnosync.dev", "2026-10-13", "22:00", "06:00"],  // 4 overnight shift of the 13th: allowed
-            ["ana@turnosync.dev", "2026-10-14", "02:00", "04:00"]); // 5 falls inside the overnight shift of row 4
+            ["ana@turnosync.dev", "2026-10-13", "05:00", "09:00"],  // 2 entra en el final del turno nocturno de la base de datos
+            ["ana@turnosync.dev", "2026-10-13", "06:00", "10:00"],  // 3 empieza cuando termina el turno nocturno: permitido
+            ["ana@turnosync.dev", "2026-10-13", "22:00", "06:00"],  // 4 turno nocturno del día 13: permitido
+            ["ana@turnosync.dev", "2026-10-14", "02:00", "04:00"]); // 5 cae dentro del turno nocturno de la fila 4
 
         var report = await ImportOkAsync(file);
 
         Assert.Equal([3, 4], report.Imported.Select(i => i.Row));
         Assert.Equal([2, 5], report.Failed.Select(f => f.Row));
-        Assert.Equal(["Overlaps row 4."], report.Failed.Single(f => f.Row == 5).Reasons);
+        Assert.Equal(["Se solapa con la fila 4."], report.Failed.Single(f => f.Row == 5).Reasons);
     }
 
     [Fact]
@@ -199,7 +202,7 @@ public sealed class ShiftImportServiceTests : IDisposable
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorType.Validation, result.Error!.Type);
-        Assert.Contains("file", result.Error.FieldErrors.Keys);
+        Assert.Equal(["Solo se admiten archivos .xlsx."], result.Error.FieldErrors["file"]);
     }
 
     [Fact]

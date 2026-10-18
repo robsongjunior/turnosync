@@ -5,10 +5,10 @@ namespace TurnoSync.Application.Common;
 public interface IRepository<T>
     where T : BaseEntity
 {
-    /// <summary>Returns the tracked entity (to update or delete it) or null if it does not exist.</summary>
+    /// <summary>Devuelve la entidad con seguimiento (para actualizarla o borrarla) o null si no existe.</summary>
     Task<T?> GetByIdAsync(int id, CancellationToken ct = default);
 
-    /// <summary>Lists without tracking (read-only).</summary>
+    /// <summary>Lista sin seguimiento (solo lectura).</summary>
     Task<IReadOnlyList<T>> ListAsync(CancellationToken ct = default);
 
     void Add(T entity);

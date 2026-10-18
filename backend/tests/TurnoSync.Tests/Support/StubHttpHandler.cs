@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace TurnoSync.Tests.Support;
 
-/// <summary>Fake HttpMessageHandler: answers with whatever the test defines and records the calls.</summary>
+/// <summary>HttpMessageHandler falso: responde lo que defina la prueba y registra las llamadas.</summary>
 public sealed class StubHttpHandler(
     Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> respond) : HttpMessageHandler
 {

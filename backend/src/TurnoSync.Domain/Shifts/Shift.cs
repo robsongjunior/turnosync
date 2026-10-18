@@ -5,7 +5,7 @@ namespace TurnoSync.Domain.Shifts;
 
 public sealed class Shift : BaseEntity
 {
-    // Used by EF Core; creation goes through Create.
+    // Lo usa EF Core; la creación pasa por Create.
     private Shift()
     {
     }
@@ -20,12 +20,12 @@ public sealed class Shift : BaseEntity
 
     public TimeOnly EndTime { get; private set; }
 
-    /// <summary>Absolute start of the shift (Date + StartTime).</summary>
+    /// <summary>Inicio absoluto del turno (Date + StartTime).</summary>
     public DateTime StartsAt { get; private set; }
 
     /// <summary>
-    /// Absolute end of the shift. If EndTime is earlier than StartTime, the shift crosses
-    /// midnight and ends the next day.
+    /// Fin absoluto del turno. Si EndTime es anterior a StartTime, el turno cruza la
+    /// medianoche y termina al día siguiente.
     /// </summary>
     public DateTime EndsAt { get; private set; }
 
@@ -38,10 +38,10 @@ public sealed class Shift : BaseEntity
 
     public void Update(int collaboratorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
     {
-        // The validator rejects this earlier (a business error); here we only protect the invariant.
+        // El validador lo rechaza antes (como error de negocio); aquí solo se protege la invariante.
         if (startTime == endTime)
         {
-            throw new ArgumentException("A shift cannot start and end at the same time.", nameof(endTime));
+            throw new ArgumentException("Un turno no puede empezar y terminar a la misma hora.", nameof(endTime));
         }
 
         CollaboratorId = collaboratorId;
@@ -53,8 +53,8 @@ public sealed class Shift : BaseEntity
     }
 
     /// <summary>
-    /// The system's overlap rule: same collaborator and intersecting [start, end) intervals.
-    /// Shifts that merely touch (08-12 and 12-16) do not overlap.
+    /// La regla de solapamiento del sistema: mismo colaborador e intervalos [inicio, fin) que se cruzan.
+    /// Los turnos que solo se tocan (08-12 y 12-16) no se solapan.
     /// </summary>
     public bool Overlaps(Shift other)
     {

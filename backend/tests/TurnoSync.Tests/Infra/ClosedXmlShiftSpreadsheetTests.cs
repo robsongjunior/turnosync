@@ -82,7 +82,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
         Assert.Equal(new DateOnly(2026, 10, 12), rows[0].Date);
         Assert.Equal(new TimeOnly(8, 0), rows[0].StartTime);
         Assert.Equal(new TimeOnly(8, 30), rows[1].StartTime);
-        Assert.Equal(new TimeOnly(17, 15), rows[1].EndTime); // seconds discarded
+        Assert.Equal(new TimeOnly(17, 15), rows[1].EndTime); // segundos descartados
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
             ["joao@turnosync.dev", new DateTime(2026, 10, 13, 15, 45, 0), new DateTime(2026, 10, 13, 9, 15, 0), new DateTime(2026, 10, 13, 17, 0, 0)]));
 
         Assert.Equal((new DateOnly(2026, 10, 12), new TimeOnly(8, 0), new TimeOnly(16, 30)), (rows[0].Date!.Value, rows[0].StartTime!.Value, rows[0].EndTime!.Value));
-        Assert.Equal(new DateOnly(2026, 10, 13), rows[1].Date); // the time part of the date is ignored
+        Assert.Equal(new DateOnly(2026, 10, 13), rows[1].Date); // la parte horaria de la fecha se ignora
         Assert.Equal(new TimeOnly(9, 15), rows[1].StartTime);
     }
 
@@ -106,7 +106,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
     [InlineData(23, 59)]
     public void Read_ShouldNotLoseAMinute_WhenTimeIsAFractionOfTheDay(int hour, int minute)
     {
-        // This is how Excel stores time: binary fractions of 1/3 etc. bring floating-point noise.
+        // Así guarda Excel la hora: las fracciones binarias de 1/3, etc. traen ruido de coma flotante.
         var fraction = (hour * 60 + minute) / 1440.0;
         var file = SheetBuilder.Standard(["ana@turnosync.dev", new DateOnly(2026, 10, 12).ToDateTime(TimeOnly.MinValue).ToOADate(), fraction, fraction]);
 
@@ -173,10 +173,12 @@ public sealed class ClosedXmlShiftSpreadsheetTests
         Assert.Null(rows[0].Date);
         Assert.Null(rows[0].StartTime);
         Assert.Equal(new TimeOnly(16, 0), rows[0].EndTime);
-        Assert.Equal(2, rows[0].Errors.Count);
-        Assert.Contains("Fecha", rows[0].Errors[0]);
-        Assert.Contains("'13/10/2026'", rows[0].Errors[0]);
-        Assert.Contains("HoraInicio", rows[0].Errors[1]);
+        Assert.Equal(
+            [
+                "Fecha: '13/10/2026' no es una fecha válida (usa una celda de fecha o el formato yyyy-MM-dd).",
+                "HoraInicio: '8am' no es una hora válida (usa una celda de hora o el formato HH:mm).",
+            ],
+            rows[0].Errors);
         Assert.Contains(rows[1].Errors, e => e.StartsWith("Fecha", StringComparison.Ordinal));
         Assert.Contains(rows[1].Errors, e => e.StartsWith("HoraFin", StringComparison.Ordinal));
     }
@@ -198,7 +200,9 @@ public sealed class ClosedXmlShiftSpreadsheetTests
         var error = ReadFailure(file);
 
         Assert.Equal(ErrorType.Validation, error.Type);
-        Assert.Contains("HoraFin", error.FieldErrors["file"][0]);
+        Assert.Equal(
+            "La hoja de cálculo debe tener las columnas Email, Fecha, HoraInicio, HoraFin (faltan: HoraFin).",
+            error.FieldErrors["file"][0]);
     }
 
     [Fact]
@@ -217,7 +221,7 @@ public sealed class ClosedXmlShiftSpreadsheetTests
         var error = ReadFailure(System.Text.Encoding.UTF8.GetBytes(content));
 
         Assert.Equal(ErrorType.Validation, error.Type);
-        Assert.Contains("not a valid .xlsx", error.FieldErrors["file"][0]);
+        Assert.Equal("El archivo no es un libro de Excel (.xlsx) válido.", error.FieldErrors["file"][0]);
     }
 
     [Fact]

@@ -67,7 +67,7 @@ public sealed class CollaboratorService(
         return ToResponse(collaborator);
     }
 
-    /// <summary>Soft-deletes the collaborator and all of their shifts in a single SaveChanges (atomic).</summary>
+    /// <summary>Borra lógicamente al colaborador y todos sus turnos en un único SaveChanges (atómico).</summary>
     public async Task<Result> DeleteAsync(int id, CancellationToken ct = default)
     {
         var collaborator = await collaborators.GetByIdAsync(id, ct);
@@ -83,7 +83,7 @@ public sealed class CollaboratorService(
 
         collaborator.Delete();
 
-        // Both repositories share the same DbContext (request scope).
+        // Ambos repositorios comparten el mismo DbContext (ámbito de la solicitud).
         await collaborators.SaveChangesAsync(ct);
 
         return Result.Success();
@@ -94,11 +94,11 @@ public sealed class CollaboratorService(
         var normalized = Collaborator.NormalizeEmail(email);
 
         return await collaborators.EmailExistsAsync(normalized, excludeId, ct)
-            ? ResultError.Conflict($"A collaborator with the email '{normalized}' already exists.")
+            ? ResultError.Conflict($"Ya existe un colaborador con el email '{normalized}'.")
             : null;
     }
 
-    private static ResultError NotFound(int id) => ResultError.NotFound($"Collaborator {id} was not found.");
+    private static ResultError NotFound(int id) => ResultError.NotFound($"No se encontró el colaborador {id}.");
 
     private static CollaboratorResponse ToResponse(Collaborator c) => new(c.Id, c.Name, c.Email, c.CountryCode);
 }

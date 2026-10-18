@@ -51,10 +51,10 @@ public sealed class ValidatorTests
     }
 
     [Theory]
-    [InlineData("E")]      // too short
-    [InlineData("ESP")]    // alpha-3, not alpha-2
-    [InlineData("12")]     // not letters
-    [InlineData("ZZ")]     // 2 letters, but not a country
+    [InlineData("E")]      // demasiado corto
+    [InlineData("ESP")]    // alfa-3, no alfa-2
+    [InlineData("12")]     // no son letras
+    [InlineData("ZZ")]     // 2 letras, pero no es un país
     public void CollaboratorValidator_ShouldFail_WhenCountryCodeIsNotAnIsoAlpha2Country(string country)
     {
         var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", "ana@turnosync.dev", country));
@@ -69,6 +69,47 @@ public sealed class ValidatorTests
             new CollaboratorRequest(new string('a', 201), "ana@turnosync.dev", "ES"));
 
         Assert.Equal(["Name"], FailedProperties(result));
+    }
+
+    [Fact]
+    public void CollaboratorValidator_ShouldReportSpanishMessages_WhenRequiredFieldsAreMissing()
+    {
+        var result = _collaboratorValidator.Validate(new CollaboratorRequest(null, null, null));
+
+        Assert.Equal(
+            ["El nombre es obligatorio.", "El email es obligatorio.", "El país es obligatorio."],
+            result.Errors.Select(e => e.ErrorMessage));
+    }
+
+    [Theory]
+    [InlineData("not-an-email", "El email no es válido.")]
+    [InlineData("@turnosync.dev", "El email no es válido.")]
+    public void CollaboratorValidator_ShouldReportSpanishMessage_WhenEmailIsInvalid(string email, string message)
+    {
+        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", email, "ES"));
+
+        Assert.Equal([message], result.Errors.Select(e => e.ErrorMessage));
+    }
+
+    [Fact]
+    public void CollaboratorValidator_ShouldReportSpanishMessagesWithTheLimit_WhenTextsAreTooLong()
+    {
+        var result = _collaboratorValidator.Validate(
+            new CollaboratorRequest(new string('a', 201), new string('a', 250) + "@x.com", "ES"));
+
+        Assert.Equal(
+            ["El nombre no puede superar los 200 caracteres.", "El email no puede superar los 254 caracteres."],
+            result.Errors.Select(e => e.ErrorMessage));
+    }
+
+    [Theory]
+    [InlineData("ESP", "El código de país debe tener 2 letras.")]
+    [InlineData("ZZ", "El código de país debe ser un código ISO 3166-1 alfa-2 válido (por ejemplo, ES).")]
+    public void CollaboratorValidator_ShouldReportSpanishMessage_WhenCountryCodeIsInvalid(string country, string message)
+    {
+        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", "ana@turnosync.dev", country));
+
+        Assert.Equal([message], result.Errors.Select(e => e.ErrorMessage));
     }
 
     [Fact]
@@ -93,11 +134,29 @@ public sealed class ValidatorTests
     }
 
     [Fact]
+    public void ShiftValidator_ShouldReportSpanishMessages_WhenRequestIsEmpty()
+    {
+        var result = _shiftValidator.Validate(new ShiftRequest(null, null, null, null));
+
+        Assert.Equal(
+            [
+                "El colaborador es obligatorio.",
+                "La fecha es obligatoria.",
+                "La hora de inicio es obligatoria.",
+                "La hora de fin es obligatoria.",
+            ],
+            result.Errors.Select(e => e.ErrorMessage));
+    }
+
+    [Fact]
     public void ShiftValidator_ShouldFailOnEndTime_WhenStartEqualsEnd()
     {
         var result = _shiftValidator.Validate(ValidShift() with { EndTime = new TimeOnly(8, 0) });
 
         Assert.Equal(["EndTime"], FailedProperties(result));
+        Assert.Equal(
+            ["La hora de fin debe ser distinta de la hora de inicio."],
+            result.Errors.Select(e => e.ErrorMessage));
     }
 
     [Fact]
@@ -117,5 +176,8 @@ public sealed class ValidatorTests
         var result = _shiftValidator.Validate(ValidShift() with { CollaboratorId = id });
 
         Assert.Equal(["CollaboratorId"], FailedProperties(result));
+        Assert.Equal(
+            ["El identificador del colaborador debe ser mayor que 0."],
+            result.Errors.Select(e => e.ErrorMessage));
     }
 }

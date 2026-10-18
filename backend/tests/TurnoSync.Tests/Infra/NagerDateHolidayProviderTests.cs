@@ -140,7 +140,7 @@ public sealed class NagerDateHolidayProviderTests
             () => provider.GetNationalHolidaysAsync("ES", 2026, cts.Token));
     }
 
-    // --- Real pipeline (AddNagerDateHolidays): 2s timeout per attempt, 5s in total and 1 retry ---
+    // --- Pipeline real (AddNagerDateHolidays): 2 s de timeout por intento, 5 s en total y 1 reintento ---
 
     private static ServiceProvider BuildPipeline(StubHttpHandler handler)
     {
@@ -209,6 +209,6 @@ public sealed class NagerDateHolidayProviderTests
 
         Assert.Null(holidays);
         Assert.InRange(stopwatch.Elapsed, TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(6));
-        Assert.Equal(2, handler.CallCount); // 2s + retry + 2s: the per-attempt timeout worked
+        Assert.Equal(2, handler.CallCount); // 2 s + reintento + 2 s: el timeout por intento funcionó
     }
 }

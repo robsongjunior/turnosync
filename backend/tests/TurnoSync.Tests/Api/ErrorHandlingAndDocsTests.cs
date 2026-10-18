@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,24 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
         Assert.DoesNotContain("InvalidOperationException", body);
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.Equal(500, problem!.Status);
+        Assert.Equal("Se ha producido un error inesperado.", problem.Title);
+    }
+
+    [Fact]
+    public async Task ClientRequestFailure_ShouldKeepItsStatusAndReturnASpanishTitle()
+    {
+        var failing = Substitute.For<ICollaboratorRepository>();
+        failing.ListAsync(Arg.Any<CancellationToken>()).ThrowsAsync(
+            new BadHttpRequestException("Request body too large.", StatusCodes.Status413PayloadTooLarge));
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddScoped<ICollaboratorRepository>(_ => failing)));
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/collaborators");
+
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("No se pudo procesar la solicitud.", problem!.Title);
     }
 
     [Fact]
@@ -81,6 +100,18 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
         Assert.Contains("\"/api/shifts/import\"", json);
         Assert.Contains("\"/api/shifts/export\"", json);
         Assert.Contains("multipart/form-data", json);
+    }
+
+    [Fact]
+    public async Task Swagger_ShouldDescribeTheEndpointsInSpanish()
+    {
+        using var client = _factory.CreateClient();
+
+        var json = await client.GetStringAsync("/swagger/v1/swagger.json");
+
+        Assert.Contains("\"summary\": \"Lista los colaboradores.\"", json);
+        Assert.Contains("\"summary\": \"Obtiene un turno.\"", json);
+        Assert.Contains("La hoja de cálculo .xlsx.", json);
     }
 
     [Fact]

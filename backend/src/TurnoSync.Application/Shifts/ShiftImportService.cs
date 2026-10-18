@@ -16,14 +16,14 @@ public sealed class ShiftImportService(
     private const string XlsxExtension = ".xlsx";
 
     /// <summary>
-    /// Validates the spreadsheet row by row. Valid rows are imported (a single, atomic SaveChanges) and
-    /// invalid ones come back in the report with the reason. A failing row does not stop the others.
+    /// Valida la hoja de cálculo fila a fila. Las filas válidas se importan (un único SaveChanges, atómico) y
+    /// las inválidas vuelven en el informe con su motivo. Una fila con error no detiene a las demás.
     /// </summary>
     public async Task<Result<ShiftImportReport>> ImportAsync(string fileName, Stream content, CancellationToken ct = default)
     {
         if (!string.Equals(Path.GetExtension(fileName), XlsxExtension, StringComparison.OrdinalIgnoreCase))
         {
-            return ResultError.Validation("file", "Only .xlsx files are supported.");
+            return ResultError.Validation("file", "Solo se admiten archivos .xlsx.");
         }
 
         var read = spreadsheet.Read(content);
@@ -76,20 +76,20 @@ public sealed class ShiftImportService(
         Collaborator? collaborator = null;
         if (string.IsNullOrWhiteSpace(row.Email))
         {
-            reasons.Add("Email is required.");
+            reasons.Add("El email es obligatorio.");
         }
         else if (!collaboratorsByEmail.TryGetValue(Collaborator.NormalizeEmail(row.Email), out collaborator))
         {
-            reasons.Add($"No collaborator found with the email '{row.Email.Trim()}'.");
+            reasons.Add($"No existe ningún colaborador con el email '{row.Email.Trim()}'.");
         }
 
-        // Unreadable cells were already explained by the spreadsheet; validating again would repeat the problem.
+        // Las celdas ilegibles ya las explicó la hoja de cálculo; validar de nuevo repetiría el problema.
         if (row.Errors.Count == 0)
         {
             var request = new ShiftRequest(collaborator?.Id, row.Date, row.StartTime, row.EndTime);
             var validation = await validator.ValidateAsync(request, ct);
 
-            // Without a collaborator the reason is already the email; do not add "CollaboratorId empty".
+            // Sin colaborador el motivo ya es el email; no se añade "CollaboratorId vacío".
             reasons.AddRange(validation.Errors
                 .Where(e => collaborator is not null || e.PropertyName != nameof(ShiftRequest.CollaboratorId))
                 .Select(e => e.ErrorMessage));
@@ -102,17 +102,17 @@ public sealed class ShiftImportService(
 
         var shift = Shift.Create(collaborator!.Id, row.Date!.Value, row.StartTime!.Value, row.EndTime!.Value);
 
-        // The same rule as the API (Shift.Overlaps): against the database and against the rows already accepted from the file.
+        // La misma regla que la API (Shift.Overlaps): contra la base de datos y contra las filas ya aceptadas del archivo.
         if (existingByCollaborator.TryGetValue(collaborator.Id, out var existing)
             && existing.FirstOrDefault(shift.Overlaps) is { } clash)
         {
-            reasons.Add($"Overlaps an existing shift ({Describe(clash)}).");
+            reasons.Add($"Se solapa con un turno existente ({Describe(clash)}).");
         }
 
         var previousRow = accepted.FirstOrDefault(a => shift.Overlaps(a.Shift));
         if (previousRow.Shift is not null)
         {
-            reasons.Add($"Overlaps row {previousRow.Row}.");
+            reasons.Add($"Se solapa con la fila {previousRow.Row}.");
         }
 
         return reasons.Count > 0 ? (null, reasons) : (shift, reasons);
@@ -135,7 +135,7 @@ public sealed class ShiftImportService(
         return (await collaborators.GetByEmailsAsync(emails, ct)).ToDictionary(c => c.Email);
     }
 
-    /// <summary>One query per collaborator, covering the date range of their rows (±1 day because of overnight shifts).</summary>
+    /// <summary>Una consulta por colaborador, que cubre el rango de fechas de sus filas (±1 día por los turnos nocturnos).</summary>
     private async Task<Dictionary<int, IReadOnlyList<Shift>>> LoadExistingShiftsAsync(
         IReadOnlyList<ShiftSheetRow> rows, Dictionary<string, Collaborator> collaboratorsByEmail, CancellationToken ct)
     {

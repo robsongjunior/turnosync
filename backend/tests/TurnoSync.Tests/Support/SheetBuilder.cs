@@ -2,14 +2,14 @@ using ClosedXML.Excel;
 
 namespace TurnoSync.Tests.Support;
 
-/// <summary>Generates in-memory .xlsx spreadsheets for the import tests.</summary>
+/// <summary>Genera hojas de cálculo .xlsx en memoria para las pruebas de importación.</summary>
 public static class SheetBuilder
 {
     public static readonly string[] StandardHeaders = ["Email", "Fecha", "HoraInicio", "HoraFin"];
 
     /// <summary>
-    /// A spreadsheet with the standard header. Each cell can be text (string), a native Excel value
-    /// (DateTime, TimeSpan), a number or null (blank cell).
+    /// Una hoja con el encabezado estándar. Cada celda puede ser texto (string), un valor nativo de Excel
+    /// (DateTime, TimeSpan), un número o null (celda en blanco).
     /// </summary>
     public static byte[] Standard(params object?[][] rows) => Build(sheet =>
     {

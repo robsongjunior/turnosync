@@ -14,9 +14,9 @@ public sealed class ShiftService(
     IValidator<ShiftRequest> validator)
 {
     /// <summary>
-    /// Lists the shifts, flagging the ones that start on a national public holiday of the collaborator's country.
-    /// One lookup per (country, year) present in the listing. If a lookup fails, that country's shifts
-    /// come with IsHoliday null and HolidaysAvailable false; the listing never fails because of it.
+    /// Lista los turnos y marca los que empiezan en un festivo nacional del país del colaborador.
+    /// Una consulta por cada (país, año) presente en el listado. Si una consulta falla, los turnos de ese país
+    /// salen con IsHoliday null y HolidaysAvailable false; el listado nunca falla por ello.
     /// </summary>
     public async Task<ShiftListResponse> ListAsync(CancellationToken ct = default)
     {
@@ -99,7 +99,7 @@ public sealed class ShiftService(
             return CollaboratorNotFound(request.CollaboratorId.Value);
         }
 
-        // The check uses a candidate so the tracked entity is not changed before we know whether there is a conflict.
+        // La comprobación usa un candidato para no modificar la entidad con seguimiento antes de saber si hay conflicto.
         var candidate = Shift.Create(collaborator.Id, request.Date!.Value, request.StartTime!.Value, request.EndTime!.Value);
 
         if (await FindOverlapAsync(candidate, excludeId: id, ct) is { } existing)
@@ -128,8 +128,8 @@ public sealed class ShiftService(
     }
 
     /// <summary>
-    /// Since a shift lasts less than 24h, only shifts from the previous to the next day can overlap it;
-    /// the entity decides (<see cref="Shift.Overlaps"/>).
+    /// Como un turno dura menos de 24 h, solo pueden solaparse con él los turnos del día anterior al siguiente;
+    /// decide la entidad (<see cref="Shift.Overlaps"/>).
     /// </summary>
     private async Task<Shift?> FindOverlapAsync(Shift candidate, int? excludeId, CancellationToken ct)
     {
@@ -140,12 +140,12 @@ public sealed class ShiftService(
     }
 
     private static ResultError OverlapConflict(string collaboratorName, Shift existing) =>
-        ResultError.Conflict($"The shift overlaps an existing shift of {collaboratorName} ({Describe(existing)}).");
+        ResultError.Conflict($"El turno se solapa con un turno existente de {collaboratorName} ({Describe(existing)}).");
 
-    private static ResultError NotFound(int id) => ResultError.NotFound($"Shift {id} was not found.");
+    private static ResultError NotFound(int id) => ResultError.NotFound($"No se encontró el turno {id}.");
 
     private static ResultError CollaboratorNotFound(int id) =>
-        ResultError.NotFound($"Collaborator {id} was not found.");
+        ResultError.NotFound($"No se encontró el colaborador {id}.");
 
     private static string Describe(Shift shift) =>
         FormattableString.Invariant($"{shift.Date:yyyy-MM-dd} {shift.StartTime:HH:mm}-{shift.EndTime:HH:mm}");

@@ -7,12 +7,12 @@ namespace TurnoSync.Tests.Support;
 internal static class TestEnvironment
 {
     /// <summary>
-    /// The FluentValidation culture is global. The API pins it to English at startup; we do the same here for
-    /// tests that do not go through Program, otherwise the messages would depend on the machine language and on execution order.
+    /// La cultura de FluentValidation es global. La API la fija en español al arrancar; aquí se hace lo mismo para las
+    /// pruebas que no pasan por Program, si no los mensajes dependerían del idioma de la máquina y del orden de ejecución.
     /// </summary>
-#pragma warning disable CA2255 // Test project, not a library
+#pragma warning disable CA2255 // Proyecto de pruebas, no una biblioteca
     [ModuleInitializer]
 #pragma warning restore CA2255
     internal static void Initialize() =>
-        ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en-US");
+        ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("es");
 }

@@ -2,23 +2,23 @@ namespace TurnoSync.Application.Common;
 
 public enum ErrorType
 {
-    /// <summary>Invalid data (HTTP 400).</summary>
+    /// <summary>Datos no válidos (HTTP 400).</summary>
     Validation,
 
-    /// <summary>Resource does not exist (HTTP 404).</summary>
+    /// <summary>El recurso no existe (HTTP 404).</summary>
     NotFound,
 
-    /// <summary>Conflict with the current state, such as a duplicate email or an overlapping shift (HTTP 409).</summary>
+    /// <summary>Conflicto con el estado actual, como un email duplicado o un turno solapado (HTTP 409).</summary>
     Conflict,
 }
 
-/// <summary>Business error. <see cref="FieldErrors"/> is only filled for validation errors.</summary>
+/// <summary>Error de negocio. <see cref="FieldErrors"/> solo se rellena en los errores de validación.</summary>
 public sealed record ResultError(ErrorType Type, string Message, IReadOnlyDictionary<string, string[]> FieldErrors)
 {
     private static readonly IReadOnlyDictionary<string, string[]> NoFieldErrors = new Dictionary<string, string[]>();
 
     public static ResultError Validation(IReadOnlyDictionary<string, string[]> fieldErrors) =>
-        new(ErrorType.Validation, "One or more validation errors occurred.", fieldErrors);
+        new(ErrorType.Validation, "Se han producido uno o más errores de validación.", fieldErrors);
 
     public static ResultError Validation(string field, string message) =>
         Validation(new Dictionary<string, string[]> { [field] = [message] });
@@ -28,7 +28,7 @@ public sealed record ResultError(ErrorType Type, string Message, IReadOnlyDictio
     public static ResultError Conflict(string message) => new(ErrorType.Conflict, message, NoFieldErrors);
 }
 
-/// <summary>Outcome of an operation with no return value. A business error is a value, not an exception.</summary>
+/// <summary>Resultado de una operación sin valor de retorno. Un error de negocio es un valor, no una excepción.</summary>
 public sealed class Result
 {
     private Result(ResultError? error) => Error = error;
@@ -42,7 +42,7 @@ public sealed class Result
     public static implicit operator Result(ResultError error) => new(error);
 }
 
-/// <summary>Outcome of an operation that returns a value. A business error is a value, not an exception.</summary>
+/// <summary>Resultado de una operación que devuelve un valor. Un error de negocio es un valor, no una excepción.</summary>
 public sealed class Result<T>
 {
     private Result(T? value, ResultError? error)

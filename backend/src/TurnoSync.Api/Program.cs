@@ -6,7 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter()));
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter()))
+    .AddSpanishErrorMessages();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -29,12 +30,12 @@ app.Services.MigrateDatabase();
 
 app.UseExceptionHandler();
 
-// Swagger is enabled in every environment, including the container.
+// Swagger está habilitado en todos los entornos, incluido el contenedor.
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// The Angular build lives in wwwroot and is served from the API's own origin (no CORS, no nginx).
-// No SPA fallback: the frontend has no router, so an unknown /api route stays a 404.
+// El build de Angular vive en wwwroot y se sirve desde el mismo origen que la API (sin CORS ni nginx).
+// Sin fallback de SPA: el frontend no tiene router, así que una ruta /api desconocida sigue siendo un 404.
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
@@ -42,5 +43,5 @@ app.MapControllers();
 
 app.Run();
 
-// Exposed for WebApplicationFactory in the integration tests
+// Expuesto para WebApplicationFactory en las pruebas de integración
 public partial class Program;

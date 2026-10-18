@@ -54,11 +54,11 @@ public sealed class ShiftsApiTests : IDisposable
     }
 
     [Theory]
-    [InlineData("12:00", "20:00")] // partial overlap at the end
-    [InlineData("06:00", "10:00")] // partial overlap at the start
-    [InlineData("10:00", "12:00")] // contained
-    [InlineData("06:00", "18:00")] // contains
-    [InlineData("08:00", "16:00")] // identical
+    [InlineData("12:00", "20:00")] // solapamiento parcial al final
+    [InlineData("06:00", "10:00")] // solapamiento parcial al inicio
+    [InlineData("10:00", "12:00")] // contenido
+    [InlineData("06:00", "18:00")] // contiene
+    [InlineData("08:00", "16:00")] // idéntico
     public async Task Create_ShouldReturn409_WhenOverlapsAnExistingShiftOfTheSameCollaborator(string start, string end)
     {
         await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");
@@ -67,8 +67,10 @@ public sealed class ShiftsApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Contains("Ana Torres", problem!.Detail);
-        Assert.Contains("2026-10-12 08:00-16:00", problem.Detail);
+        Assert.Equal("Conflicto", problem!.Title);
+        Assert.Equal(
+            "El turno se solapa con un turno existente de Ana Torres (2026-10-12 08:00-16:00).",
+            problem.Detail);
     }
 
     [Fact]
@@ -129,6 +131,7 @@ public sealed class ShiftsApiTests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         Assert.Equal(["endTime"], problem!.Errors.Keys);
+        Assert.Equal(["La hora de fin debe ser distinta de la hora de inicio."], problem.Errors["endTime"]);
     }
 
     [Fact]
@@ -166,6 +169,8 @@ public sealed class ShiftsApiTests : IDisposable
         var response = await PostShiftAsync(99, "2026-10-12", "08:00", "16:00");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("No se encontró el colaborador 99.", problem!.Detail);
     }
 
     [Fact]
@@ -174,6 +179,9 @@ public sealed class ShiftsApiTests : IDisposable
         var response = await _client.GetAsync("/api/shifts/999");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal("No encontrado", problem!.Title);
+        Assert.Equal("No se encontró el turno 999.", problem.Detail);
     }
 
     [Fact]

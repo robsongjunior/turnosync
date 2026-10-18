@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using TurnoSync.Api.Common;
 using TurnoSync.Application.Shifts;
@@ -13,15 +14,15 @@ public sealed class ShiftsController(
     private const string XlsxContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     /// <summary>
-    /// Lists all shifts ordered by start and then by collaborator name, flagging the ones that start on a
-    /// national public holiday of the collaborator's country (Nager.Date). If the holiday lookup fails,
-    /// <c>isHoliday</c> is null for the affected country's shifts and <c>holidaysAvailable</c> is false; the listing never fails.
+    /// Lista todos los turnos ordenados por inicio y luego por nombre del colaborador, y marca los que empiezan
+    /// en un festivo nacional del país del colaborador (Nager.Date). Si falla la consulta de festivos,
+    /// <c>isHoliday</c> es null en los turnos del país afectado y <c>holidaysAvailable</c> es false; el listado nunca falla.
     /// </summary>
     [HttpGet]
     [ProducesResponseType<ShiftListResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(CancellationToken ct) => Ok(await service.ListAsync(ct));
 
-    /// <summary>Gets a shift.</summary>
+    /// <summary>Obtiene un turno.</summary>
     [HttpGet(RouteConsts.ById)]
     [ProducesResponseType<ShiftResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -29,8 +30,8 @@ public sealed class ShiftsController(
         HandleResult(await service.GetAsync(id, ct));
 
     /// <summary>
-    /// Creates a shift. If the end time is earlier than the start time, the shift crosses midnight.
-    /// Returns 409 if it overlaps another shift of the same collaborator.
+    /// Crea un turno. Si la hora de fin es anterior a la de inicio, el turno cruza la medianoche.
+    /// Devuelve 409 si se solapa con otro turno del mismo colaborador.
     /// </summary>
     [HttpPost]
     [ProducesResponseType<ShiftResponse>(StatusCodes.Status201Created)]
@@ -42,7 +43,7 @@ public sealed class ShiftsController(
             await service.CreateAsync(request, ct),
             created => CreatedAtAction(nameof(Get), new { id = created.Id }, created));
 
-    /// <summary>Updates a shift. Returns 409 if it would overlap another shift of the same collaborator.</summary>
+    /// <summary>Actualiza un turno. Devuelve 409 si se solapara con otro turno del mismo colaborador.</summary>
     [HttpPut(RouteConsts.ById)]
     [ProducesResponseType<ShiftResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -51,7 +52,7 @@ public sealed class ShiftsController(
     public async Task<IActionResult> Update(int id, ShiftRequest request, CancellationToken ct) =>
         HandleResult(await service.UpdateAsync(id, request, ct));
 
-    /// <summary>Soft-deletes a shift.</summary>
+    /// <summary>Borra lógicamente un turno.</summary>
     [HttpDelete(RouteConsts.ById)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -59,16 +60,18 @@ public sealed class ShiftsController(
         HandleResult(await service.DeleteAsync(id, ct), NoContent);
 
     /// <summary>
-    /// Imports shifts from an .xlsx with the columns Email, Fecha, HoraInicio and HoraFin (first sheet, headers
-    /// matched by name, in any order). Each row is validated on its own: valid rows are imported and invalid ones
-    /// are returned in the report with the reason. Dates and times can be Excel cells or text (yyyy-MM-dd, HH:mm).
+    /// Importa turnos desde un .xlsx con las columnas Email, Fecha, HoraInicio y HoraFin (primera hoja, encabezados
+    /// localizados por nombre, en cualquier orden). Cada fila se valida por separado: las válidas se importan y las
+    /// inválidas se devuelven en el informe con su motivo. Las fechas y horas pueden ser celdas de Excel o texto
+    /// (yyyy-MM-dd, HH:mm).
     /// </summary>
-    /// <param name="file">The .xlsx spreadsheet.</param>
+    /// <param name="file">La hoja de cálculo .xlsx.</param>
     [HttpPost(RouteConsts.Import)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType<ShiftImportReport>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Import(IFormFile file, CancellationToken ct)
+    public async Task<IActionResult> Import(
+        [Required(ErrorMessage = "El archivo .xlsx es obligatorio.")] IFormFile file, CancellationToken ct)
     {
         await using var content = file.OpenReadStream();
 
@@ -76,11 +79,11 @@ public sealed class ShiftsController(
     }
 
     /// <summary>
-    /// Exports to .xlsx the shifts whose start date is between <c>from</c> and <c>to</c> (both inclusive and
-    /// required, yyyy-MM-dd). Same columns as the import.
+    /// Exporta a .xlsx los turnos cuya fecha de inicio está entre <c>from</c> y <c>to</c> (ambas inclusivas y
+    /// obligatorias, yyyy-MM-dd). Mismas columnas que la importación.
     /// </summary>
-    /// <param name="from">First date (inclusive).</param>
-    /// <param name="to">Last date (inclusive).</param>
+    /// <param name="from">Primera fecha (inclusive).</param>
+    /// <param name="to">Última fecha (inclusive).</param>
     [HttpGet(RouteConsts.Export)]
     [Produces(XlsxContentType)]
     [ProducesResponseType<FileContentResult>(StatusCodes.Status200OK)]

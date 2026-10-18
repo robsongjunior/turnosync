@@ -25,8 +25,8 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
         }
         catch (Exception)
         {
-            // Any failure to open it (not a zip, not OOXML, corrupt) means "not a valid .xlsx".
-            return ResultError.Validation("file", "The file is not a valid .xlsx workbook.");
+            // Cualquier fallo al abrirlo (no es un zip, no es OOXML, está corrupto) significa "no es un .xlsx válido".
+            return ResultError.Validation("file", "El archivo no es un libro de Excel (.xlsx) válido.");
         }
 
         using (workbook)
@@ -40,8 +40,8 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
             {
                 return ResultError.Validation(
                     "file",
-                    $"The spreadsheet must have the columns {string.Join(", ", Headers)} " +
-                    $"(missing: {string.Join(", ", sheet is null || headerRow is null ? Headers : missing)}).");
+                    $"La hoja de cálculo debe tener las columnas {string.Join(", ", Headers)} " +
+                    $"(faltan: {string.Join(", ", sheet is null || headerRow is null ? Headers : missing)}).");
             }
 
             var rows = new List<ShiftSheetRow>();
@@ -65,7 +65,7 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
     public byte[] Write(IEnumerable<ShiftExportRow> rows)
     {
         using var workbook = new XLWorkbook();
-        var sheet = workbook.Worksheets.Add("Shifts");
+        var sheet = workbook.Worksheets.Add("Turnos");
 
         for (var i = 0; i < Headers.Length; i++)
         {
@@ -79,7 +79,7 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
         {
             sheet.Cell(rowNumber, 1).Value = row.Email;
 
-            // Native date and time cells (not text), so the file can be imported again.
+            // Celdas nativas de fecha y hora (no texto), para que el archivo se pueda volver a importar.
             var date = sheet.Cell(rowNumber, 2);
             date.Value = row.Date.ToDateTime(TimeOnly.MinValue);
             date.Style.DateFormat.Format = "yyyy-mm-dd";
@@ -95,7 +95,7 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
             rowNumber++;
         }
 
-        // Fixed widths: AdjustToContents measures fonts, which is unreliable in containers without installed fonts.
+        // Anchos fijos: AdjustToContents mide fuentes, lo que no es fiable en contenedores sin fuentes instaladas.
         sheet.Column(1).Width = 32;
         sheet.Column(2).Width = 12;
         sheet.Column(3).Width = 12;
@@ -130,7 +130,7 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
         return new ShiftSheetRow(rowNumber, email.Length == 0 ? null : email, date, start, end, errors);
     }
 
-    /// <summary>Date as a native Excel value (or serial number) or as yyyy-MM-dd text. An empty cell = null, no error.</summary>
+    /// <summary>Fecha como valor nativo de Excel (o número de serie) o como texto yyyy-MM-dd. Una celda vacía = null, sin error.</summary>
     private static DateOnly? ReadDate(IXLCell cell, List<string> errors)
     {
         if (cell.IsEmpty())
@@ -156,11 +156,11 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
             return parsed;
         }
 
-        errors.Add($"{DateHeader}: '{cell.GetString()}' is not a valid date (use a date cell or yyyy-MM-dd).");
+        errors.Add($"{DateHeader}: '{cell.GetString()}' no es una fecha válida (usa una celda de fecha o el formato yyyy-MM-dd).");
         return null;
     }
 
-    /// <summary>Time as a native Excel value (fraction of a day) or as HH:mm text. Seconds are discarded.</summary>
+    /// <summary>Hora como valor nativo de Excel (fracción de día) o como texto HH:mm. Los segundos se descartan.</summary>
     private static TimeOnly? ReadTime(IXLCell cell, string header, List<string> errors)
     {
         if (cell.IsEmpty())
@@ -192,13 +192,13 @@ public sealed class ClosedXmlShiftSpreadsheet : IShiftSpreadsheet
             return new TimeOnly(parsed.Hour, parsed.Minute);
         }
 
-        errors.Add($"{header}: '{cell.GetString()}' is not a valid time (use a time cell or HH:mm).");
+        errors.Add($"{header}: '{cell.GetString()}' no es una hora válida (usa una celda de hora o el formato HH:mm).");
         return null;
     }
 
     /// <summary>
-    /// Excel stores time as a fraction of a day, which brings floating-point noise (07:59:59.9999 instead
-    /// of 08:00). Rounding to the nearest minute avoids reading one minute too few.
+    /// Excel guarda la hora como fracción de día, lo que trae ruido de coma flotante (07:59:59,9999 en lugar
+    /// de 08:00). Redondear al minuto más cercano evita leer un minuto de menos.
     /// </summary>
     private static TimeOnly FromMinutes(double totalMinutes)
     {

@@ -4,7 +4,7 @@ namespace TurnoSync.Domain.Collaborators;
 
 public sealed class Collaborator : BaseEntity
 {
-    // Used by EF Core; creation goes through Create.
+    // Lo usa EF Core; la creación pasa por Create.
     private Collaborator()
     {
     }
@@ -13,7 +13,7 @@ public sealed class Collaborator : BaseEntity
 
     public string Email { get; private set; } = string.Empty;
 
-    /// <summary>ISO 3166-1 alpha-2 (e.g. ES, BR), the format used by Nager.Date.</summary>
+    /// <summary>ISO 3166-1 alfa-2 (por ejemplo, ES, BR), el formato que usa Nager.Date.</summary>
     public string CountryCode { get; private set; } = string.Empty;
 
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();

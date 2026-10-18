@@ -5,19 +5,19 @@ namespace TurnoSync.Application.Shifts;
 
 public interface IShiftRepository : IRepository<Shift>
 {
-    /// <summary>All shifts with their collaborator, in a fixed order: shift start, then collaborator name.</summary>
+    /// <summary>Todos los turnos con su colaborador, en orden fijo: inicio del turno y luego nombre del colaborador.</summary>
     Task<IReadOnlyList<Shift>> ListWithCollaboratorAsync(CancellationToken ct = default);
 
     /// <summary>
-    /// The collaborator's shifts with Date between from and to (inclusive), to check for overlaps.
-    /// excludeId skips the shift itself when updating.
+    /// Los turnos del colaborador con Date entre from y to (inclusive), para comprobar solapamientos.
+    /// excludeId omite el propio turno al actualizar.
     /// </summary>
     Task<IReadOnlyList<Shift>> ListForOverlapAsync(
         int collaboratorId, DateOnly from, DateOnly to, int? excludeId, CancellationToken ct = default);
 
-    /// <summary>Shifts with Date between from and to (inclusive), with their collaborator, in the same order as the listing.</summary>
+    /// <summary>Los turnos con Date entre from y to (inclusive), con su colaborador, en el mismo orden que el listado.</summary>
     Task<IReadOnlyList<Shift>> ListByPeriodAsync(DateOnly from, DateOnly to, CancellationToken ct = default);
 
-    /// <summary>The collaborator's tracked shifts (for the cascading soft delete).</summary>
+    /// <summary>Los turnos del colaborador con seguimiento (para el borrado lógico en cascada).</summary>
     Task<IReadOnlyList<Shift>> ListByCollaboratorAsync(int collaboratorId, CancellationToken ct = default);
 }
