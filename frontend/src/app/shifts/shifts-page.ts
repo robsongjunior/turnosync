@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CollaboratorForm } from '../collaborators/collaborator-form';
 import { CollaboratorsApi } from '../core/collaborators-api';
 import { describeError } from '../core/errors';
 import { Collaborator, ImportReport, Shift } from '../core/models';
@@ -8,7 +9,7 @@ import { ShiftForm } from './shift-form';
 
 @Component({
   selector: 'app-shifts-page',
-  imports: [ShiftForm, ImportReportPanel],
+  imports: [ShiftForm, CollaboratorForm, ImportReportPanel],
   templateUrl: './shifts-page.html',
 })
 export class ShiftsPage implements OnInit {
@@ -22,6 +23,7 @@ export class ShiftsPage implements OnInit {
   protected readonly formOpen = signal(false);
   /** El turno que se está editando; null = el formulario (si está abierto) crea uno nuevo. */
   protected readonly editing = signal<Shift | null>(null);
+  protected readonly collaboratorFormOpen = signal(false);
   protected readonly importReport = signal<ImportReport | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -69,6 +71,12 @@ export class ShiftsPage implements OnInit {
     this.closeForm();
     this.error.set(null);
     await this.load();
+  }
+
+  protected async onCollaboratorSaved(): Promise<void> {
+    this.collaboratorFormOpen.set(false);
+    this.error.set(null);
+    await this.load(); // el nuevo colaborador aparece ya en el selector del formulario de turnos
   }
 
   protected async onFileSelected(event: Event): Promise<void> {

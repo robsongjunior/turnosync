@@ -3,7 +3,7 @@
 Aplicación para gestionar los turnos de trabajo de colaboradores de distintos países.
 
 - **Backend:** API REST en .NET 9 (ASP.NET Core, Arquitectura Limpia, EF Core + SQLite).
-- **Frontend:** una pantalla en Angular 22 (listado de turnos, formulario de alta/edición, importar y exportar).
+- **Frontend:** una pantalla en Angular 22 (listado de turnos, formulario de alta/edición, alta de colaboradores, importar y exportar).
 - **Extras del enunciado:** importación/exportación `.xlsx`, festivos del país de cada colaborador (Nager.Date), Swagger y pruebas automatizadas.
 
 ## Cómo ejecutarlo
@@ -51,7 +51,7 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 
 | # | Requisito | Solución |
 | --- | --- | --- |
-| 1 | CRUD de colaboradores (nombre, email, país) | 5 endpoints; solo esos 3 campos |
+| 1 | CRUD de colaboradores (nombre, email, país) | 5 endpoints; solo esos 3 campos. Alta también desde la interfaz |
 | 2 | CRUD de turnos (colaborador, fecha, inicio, fin) | 5 endpoints; solo esos 4 campos |
 | 3 | Sin solapamientos para el mismo colaborador | `Shift.Overlaps` en el dominio, aplicado en POST, PUT e importación |
 | 4 | Importar `.xlsx` con informe fila a fila | Columnas `Email`, `Fecha`, `HoraInicio`, `HoraFin`; informe `imported` / `failed` con los motivos |
@@ -144,6 +144,12 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
   guías de Microsoft (Framework Design Guidelines, C# Coding Conventions, reglas de nombres e IDExxxx) que se aplica en el *build*.
 - **Frontend mínimo.** Angular 22 con componentes *standalone*, *signals*, sin zone.js, Reactive Forms, sin librería de UI y sin
   router (es una sola pantalla). Llama a URLs relativas (`/api/...`): no hay CORS ni `environment.ts`.
+- **Alta de colaboradores en la misma pantalla.** El enunciado pide en el frontend solo el listado, el formulario de turnos, importar
+  y exportar, y la primera versión dejó los colaboradores solo en la API. Lo cambié por usabilidad: la importación **no crea**
+  colaboradores (los busca por email), así que desde la interfaz solo se podía trabajar con los de ejemplo, y no se veía el flujo
+  completo (dar de alta un colaborador → crear o importar sus turnos → ver los festivos de su país → exportar) sin pasar por Swagger.
+  Para no añadir pantallas, el botón **"+ Nuevo colaborador"** está junto a "+ Nuevo turno" y abre, igual que este, un formulario
+  debajo de la barra (nombre, email y país). La validación de verdad (país ISO existente, email repetido → 409) sigue en la API.
 - **Docker.** `Dockerfile` multi-etapa: `node:22` (build de Angular) → `sdk:9.0` (publish) → `aspnet:9.0` (`final`, con Angular en
   `wwwroot`); más una etapa `test` que ejecuta `dotnet test`.
 
@@ -166,7 +172,7 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
 - **Caché de festivos:** evita una llamada externa por cada carga del listado y limita el impacto de una API lenta.
 - **Servicio `tests` en `docker-compose`** (perfil `test`, no se levanta con `up`): permite ejecutar las pruebas sin tener el SDK instalado.
 - **Borrado lógico (*soft delete*):** el enunciado no dice qué hacer al borrar; así no se pierde el historial y se conserva la integridad referencial.
-- **Colaboradores de ejemplo (*seed*):** el frontend no tiene pantalla de colaboradores (no se pide); sin ellos no habría forma de crear el primer turno desde la interfaz.
+- **Colaboradores de ejemplo (*seed*):** permiten probar los turnos, los festivos de varios países y la importación nada más arrancar.
 
 ## Persistencia
 
@@ -202,12 +208,12 @@ xUnit + NSubstitute + `WebApplicationFactory`. Se prioriza la calidad sobre la c
   JSON mal formado, valor no válido, 415), Swagger en español y 500 sin filtrar detalles.
 
 No hay pruebas automatizadas del frontend: la regla de negocio está toda en el backend y el enunciado deja la elección de las pruebas más relevantes.
-El frontend se verificó a mano (crear, editar, 409, importar, exportar y fallo de Nager.Date).
+El frontend se verificó a mano (crear, editar, 409, importar, exportar, fallo de Nager.Date y alta de colaboradores con email repetido y país no válido).
 
 ## Qué quedó fuera (y por qué)
 
-- **Pantalla de colaboradores y borrado de turnos desde la interfaz:** existen en la API y en Swagger; el enunciado pide solo el listado, el formulario,
-  importar y exportar.
+- **Edición y borrado de colaboradores, y borrado de turnos, desde la interfaz:** existen en la API y en Swagger. En la interfaz solo está
+  el alta de colaboradores (ver [Decisiones de diseño](#decisiones-de-diseño)), que es lo que hace falta para recorrer el flujo completo.
 - **Filtros, paginación y orden elegido por el usuario:** el listado se devuelve en orden fijo (inicio del turno y luego nombre).
 - **Autenticación y autorización**, i18n (la aplicación solo está en español) y pruebas del frontend.
 - **Concurrencia entre dos peticiones simultáneas:** el servicio comprueba el solapamiento y luego guarda; entre ambos pasos puede colarse otra

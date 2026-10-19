@@ -129,6 +129,10 @@ label.inline {
   font-weight: 400;
 }
 
+input.uppercase {
+  text-transform: uppercase;
+}
+
 .hint {
   color: var(--muted);
   font-size: 12px;

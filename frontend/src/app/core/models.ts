@@ -5,6 +5,13 @@ export interface Collaborator {
   countryCode: string;
 }
 
+export interface CollaboratorRequest {
+  name: string;
+  email: string;
+  /** Código ISO 3166-1 alfa-2, por ejemplo ES. */
+  countryCode: string;
+}
+
 export interface Shift {
   id: number;
   collaboratorId: number;

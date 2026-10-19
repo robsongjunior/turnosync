@@ -12,6 +12,7 @@
 
   <div class="toolbar">
     <button type="button" class="primary" (click)="newShift()">+ Nuevo turno</button>
+    <button type="button" class="primary" (click)="collaboratorFormOpen.set(true)">+ Nuevo colaborador</button>
     <button type="button" (click)="fileInput.click()" [disabled]="busy()">Importar</button>
     <input #fileInput type="file" accept=".xlsx" hidden (change)="onFileSelected($event)" />
 
@@ -30,6 +31,10 @@
 
   @if (!holidaysAvailable()) {
     <p class="banner banner-warn" role="status">⚠ Festivos no disponibles para algunos turnos.</p>
+  }
+
+  @if (collaboratorFormOpen()) {
+    <app-collaborator-form (saved)="onCollaboratorSaved()" (cancelled)="collaboratorFormOpen.set(false)" />
   }
 
   @if (formOpen()) {

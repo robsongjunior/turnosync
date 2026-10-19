@@ -1,0 +1,53 @@
+<form class="panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <h2>Nuevo colaborador</h2>
+
+  @if (formError(); as message) {
+    <p class="banner banner-error" role="alert">{{ message }}</p>
+  }
+
+  <div class="form-grid">
+    <label>
+      Nombre
+      <input type="text" formControlName="name" maxlength="200" />
+      @if (showError('name')) {
+        <span class="field-error">Campo obligatorio</span>
+      }
+      @for (message of serverErrorsOf('name'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+
+    <label>
+      Email
+      <input type="email" formControlName="email" maxlength="254" />
+      @if (showError('email')) {
+        <span class="field-error">
+          {{ form.controls.email.hasError('required') ? 'Campo obligatorio' : 'El email no es válido' }}
+        </span>
+      }
+      @for (message of serverErrorsOf('email'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+
+    <label>
+      País
+      <input type="text" formControlName="countryCode" maxlength="2" placeholder="ES" class="uppercase" />
+      @if (showError('countryCode')) {
+        <span class="field-error">
+          {{ form.controls.countryCode.hasError('required') ? 'Campo obligatorio' : 'Debe tener 2 letras' }}
+        </span>
+      }
+      @for (message of serverErrorsOf('countryCode'); track message) {
+        <span class="field-error">{{ message }}</span>
+      }
+    </label>
+  </div>
+
+  <p class="hint">El país es el código ISO de 2 letras (ES, BR, AR…); con él se consultan los festivos del colaborador.</p>
+
+  <div class="actions">
+    <button type="submit" class="primary" [disabled]="submitting()">{{ submitting() ? 'Guardando…' : 'Guardar' }}</button>
+    <button type="button" (click)="cancelled.emit()" [disabled]="submitting()">Cancelar</button>
+  </div>
+</form>
