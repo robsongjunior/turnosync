@@ -8,7 +8,7 @@ internal sealed class CollaboratorConfiguration : IEntityTypeConfiguration<Colla
 {
     public void Configure(EntityTypeBuilder<Collaborator> builder)
     {
-        builder.ToTable("collaborators");
+        builder.ToTable("employees");
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Name).IsRequired().HasMaxLength(200);

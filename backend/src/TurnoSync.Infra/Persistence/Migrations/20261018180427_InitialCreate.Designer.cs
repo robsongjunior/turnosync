@@ -50,14 +50,14 @@ namespace TurnoSync.Infra.Persistence.Migrations
                         .HasColumnName("name");
 
                     b.HasKey("Id")
-                        .HasName("pk_collaborators");
+                        .HasName("pk_employees");
 
                     b.HasIndex("Email")
                         .IsUnique()
-                        .HasDatabaseName("ix_collaborators_email")
+                        .HasDatabaseName("ix_employees_email")
                         .HasFilter("is_deleted = 0");
 
-                    b.ToTable("collaborators", (string)null);
+                    b.ToTable("employees", (string)null);
 
                     b.HasData(
                         new

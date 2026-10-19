@@ -14,7 +14,7 @@ namespace TurnoSync.Infra.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "collaborators",
+                name: "employees",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -26,7 +26,7 @@ namespace TurnoSync.Infra.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_collaborators", x => x.id);
+                    table.PrimaryKey("pk_employees", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -49,13 +49,13 @@ namespace TurnoSync.Infra.Persistence.Migrations
                     table.ForeignKey(
                         name: "fk_shifts_collaborators_collaborator_id",
                         column: x => x.collaborator_id,
-                        principalTable: "collaborators",
+                        principalTable: "employees",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.InsertData(
-                table: "collaborators",
+                table: "employees",
                 columns: new[] { "id", "country_code", "email", "is_deleted", "name" },
                 values: new object[,]
                 {
@@ -67,8 +67,8 @@ namespace TurnoSync.Infra.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_collaborators_email",
-                table: "collaborators",
+                name: "ix_employees_email",
+                table: "employees",
                 column: "email",
                 unique: true,
                 filter: "is_deleted = 0");
@@ -86,7 +86,7 @@ namespace TurnoSync.Infra.Persistence.Migrations
                 name: "shifts");
 
             migrationBuilder.DropTable(
-                name: "collaborators");
+                name: "employees");
         }
     }
 }
