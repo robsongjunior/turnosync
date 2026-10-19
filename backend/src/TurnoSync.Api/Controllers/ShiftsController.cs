@@ -14,13 +14,24 @@ public sealed class ShiftsController(
     private const string XlsxContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     /// <summary>
-    /// Lista todos los turnos ordenados por inicio y luego por nombre del colaborador, y marca los que empiezan
+    /// Lista los turnos ordenados por inicio y luego por nombre del colaborador, y marca los que empiezan
     /// en un festivo nacional del país del colaborador (Nager.Date). Si falla la consulta de festivos,
     /// <c>isHoliday</c> es null en los turnos del país afectado y <c>holidaysAvailable</c> es false; el listado nunca falla.
+    /// Los filtros son opcionales y se combinan entre sí.
     /// </summary>
+    /// <param name="collaboratorId">Solo los turnos de este colaborador.</param>
+    /// <param name="from">Primera fecha de inicio (inclusive, yyyy-MM-dd).</param>
+    /// <param name="to">Última fecha de inicio (inclusive, yyyy-MM-dd).</param>
+    /// <param name="holiday">
+    /// true: solo los turnos en festivo; false: solo los que no lo están. Los turnos con festivo desconocido
+    /// (<c>isHoliday</c> null) quedan fuera de ambos.
+    /// </param>
     [HttpGet]
     [ProducesResponseType<ShiftListResponse>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(CancellationToken ct) => Ok(await service.ListAsync(ct));
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> List(
+        int? collaboratorId, DateOnly? from, DateOnly? to, bool? holiday, CancellationToken ct) =>
+        HandleResult(await service.ListAsync(new ShiftListFilter(collaboratorId, from, to, holiday), ct));
 
     /// <summary>Obtiene un turno.</summary>
     [HttpGet(RouteConsts.ById)]
@@ -80,16 +91,17 @@ public sealed class ShiftsController(
 
     /// <summary>
     /// Exporta a .xlsx los turnos cuya fecha de inicio está entre <c>from</c> y <c>to</c> (ambas inclusivas y
-    /// obligatorias, yyyy-MM-dd). Mismas columnas que la importación.
+    /// obligatorias, yyyy-MM-dd), opcionalmente de un solo colaborador. Mismas columnas que la importación.
     /// </summary>
     /// <param name="from">Primera fecha (inclusive).</param>
     /// <param name="to">Última fecha (inclusive).</param>
+    /// <param name="collaboratorId">Solo los turnos de este colaborador (opcional).</param>
     [HttpGet(RouteConsts.Export)]
     [Produces(XlsxContentType)]
     [ProducesResponseType<FileContentResult>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Export(DateOnly? from, DateOnly? to, CancellationToken ct) =>
+    public async Task<IActionResult> Export(DateOnly? from, DateOnly? to, int? collaboratorId, CancellationToken ct) =>
         HandleResult(
-            await exportService.ExportAsync(from, to, ct),
+            await exportService.ExportAsync(from, to, collaboratorId, ct),
             file => File(file.Content, XlsxContentType, file.FileName));
 }

@@ -9,32 +9,18 @@ public sealed class ShiftExportService(IShiftRepository shifts, IShiftSpreadshee
 {
     /// <summary>
     /// Exporta los turnos cuya fecha (Date, la de inicio) está entre from y to, ambas inclusivas y obligatorias,
-    /// en el mismo orden que el listado y con las mismas columnas que la importación.
+    /// opcionalmente de un solo colaborador, en el mismo orden que el listado y con las mismas columnas que la
+    /// importación. No filtra por festivo: generar el archivo no depende de la API externa.
     /// </summary>
-    public async Task<Result<ExportedFile>> ExportAsync(DateOnly? from, DateOnly? to, CancellationToken ct = default)
+    public async Task<Result<ExportedFile>> ExportAsync(
+        DateOnly? from, DateOnly? to, int? collaboratorId = null, CancellationToken ct = default)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (from is null)
+        if (ShiftPeriod.Validate(from, to, required: true) is { } invalid)
         {
-            errors["from"] = ["El parámetro 'from' es obligatorio (yyyy-MM-dd)."];
+            return invalid;
         }
 
-        if (to is null)
-        {
-            errors["to"] = ["El parámetro 'to' es obligatorio (yyyy-MM-dd)."];
-        }
-
-        if (from > to)
-        {
-            errors["from"] = ["El parámetro 'from' debe ser anterior o igual a 'to'."];
-        }
-
-        if (errors.Count > 0)
-        {
-            return ResultError.Validation(errors);
-        }
-
-        var period = await shifts.ListByPeriodAsync(from!.Value, to!.Value, ct);
+        var period = await shifts.ListWithCollaboratorAsync(collaboratorId, from, to, ct);
         var content = spreadsheet.Write(
             period.Select(s => new ShiftExportRow(s.Collaborator!.Email, s.Date, s.StartTime, s.EndTime)));
 

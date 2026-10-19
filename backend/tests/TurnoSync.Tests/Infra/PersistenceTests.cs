@@ -105,7 +105,7 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
-    public async Task ListByPeriod_ShouldBeInclusiveOnBothEnds_AndOrderedByStartThenName()
+    public async Task ListWithCollaborator_ShouldFilterByPeriodInclusiveOnBothEnds_AndOrderByStartThenName()
     {
         await using var context = _database.CreateContext();
         var repository = new ShiftRepository(context);
@@ -119,7 +119,7 @@ public sealed class PersistenceTests : IDisposable
         ]);
         await repository.SaveChangesAsync();
 
-        var result = await repository.ListByPeriodAsync(Day, Day.AddDays(2));
+        var result = await repository.ListWithCollaboratorAsync(from: Day, to: Day.AddDays(2));
 
         Assert.Equal(
             [("Ana Torres", Day), ("Lucía Fernández", Day), ("João Lima", Day.AddDays(2))],

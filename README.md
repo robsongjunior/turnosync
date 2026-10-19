@@ -3,7 +3,7 @@
 Aplicación para gestionar los turnos de trabajo de colaboradores de distintos países.
 
 - **Backend:** API REST en .NET 9 (ASP.NET Core, Arquitectura Limpia, EF Core + SQLite).
-- **Frontend:** una pantalla en Angular 22 (listado de turnos, formulario de alta/edición, alta de colaboradores, importar y exportar).
+- **Frontend:** una pantalla en Angular 22 (listado de turnos con filtros, formulario de alta/edición, alta de colaboradores, importar y exportar).
 - **Extras del enunciado:** importación/exportación `.xlsx`, festivos del país de cada colaborador (Nager.Date), Swagger y pruebas automatizadas.
 
 ## Cómo ejecutarlo
@@ -52,10 +52,10 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 | # | Requisito | Solución |
 | --- | --- | --- |
 | 1 | CRUD de colaboradores (nombre, email, país) | 5 endpoints; solo esos 3 campos. Alta también desde la interfaz |
-| 2 | CRUD de turnos (colaborador, fecha, inicio, fin) | 5 endpoints; solo esos 4 campos |
+| 2 | CRUD de turnos (colaborador, fecha, inicio, fin) | 5 endpoints; solo esos 4 campos. El listado se filtra por colaborador, período y festivo |
 | 3 | Sin solapamientos para el mismo colaborador | `Shift.Overlaps` en el dominio, aplicado en POST, PUT e importación |
 | 4 | Importar `.xlsx` con informe fila a fila | Columnas `Email`, `Fecha`, `HoraInicio`, `HoraFin`; informe `imported` / `failed` con los motivos |
-| 5 | Exportar `.xlsx` filtrado por rango de fechas | `GET /api/shifts/export?from=&to=`, mismas 4 columnas |
+| 5 | Exportar `.xlsx` filtrado por rango de fechas | `GET /api/shifts/export?from=&to=` (y `collaboratorId` opcional), mismas 4 columnas |
 | 6 | Festivos del país del colaborador (API externa) | Nager.Date; `isHoliday` en el listado; si la API falla, `isHoliday: null` y `holidaysAvailable: false` |
 | 7 | Base de datos relacional | SQLite en archivo vía EF Core (con migraciones), en un volumen de Docker |
 | 8 | `docker-compose up` | Un servicio `app` (API + Angular) |
@@ -72,13 +72,13 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 | `POST /api/collaborators` | Crea | 201 · 400 · 409 (email duplicado) |
 | `PUT /api/collaborators/{id}` | Actualiza | 200 · 400 · 404 · 409 |
 | `DELETE /api/collaborators/{id}` | Borrado lógico del colaborador **y de sus turnos** | 204 · 404 |
-| `GET /api/shifts` | Lista todos los turnos con `isHoliday` | 200 |
+| `GET /api/shifts?collaboratorId=&from=&to=&holiday=` | Lista los turnos con `isHoliday`; filtros opcionales (ver abajo) | 200 · 400 (`from > to`) |
 | `GET /api/shifts/{id}` | Detalle | 200 · 404 |
 | `POST /api/shifts` | Crea | 201 · 400 · 404 (colaborador) · 409 (solapamiento) |
 | `PUT /api/shifts/{id}` | Actualiza | 200 · 400 · 404 · 409 |
 | `DELETE /api/shifts/{id}` | Borrado lógico | 204 · 404 |
 | `POST /api/shifts/import` | Sube un `.xlsx` (multipart, campo `file`) y devuelve el informe | 200 · 400 |
-| `GET /api/shifts/export?from=&to=` | Descarga un `.xlsx` llamado `turnos_{from}_{to}.xlsx` (`from` y `to` obligatorios, `yyyy-MM-dd`) | 200 · 400 |
+| `GET /api/shifts/export?from=&to=&collaboratorId=` | Descarga un `.xlsx` llamado `turnos_{from}_{to}.xlsx` (`from` y `to` obligatorios, `yyyy-MM-dd`; `collaboratorId` opcional) | 200 · 400 |
 
 Los errores siguen el estándar `ProblemDetails` / `ValidationProblemDetails` de ASP.NET Core. Los mensajes están en español,
 también los que genera el propio framework (cuerpo vacío, JSON mal formado, valor no válido…).
@@ -94,6 +94,16 @@ Ejemplo de turno en el listado (`GET /api/shifts`):
   "holidaysAvailable": true
 }
 ```
+
+### Filtros del listado
+
+Todos son opcionales y se combinan entre sí (`GET /api/shifts?collaboratorId=1&from=2026-10-01&to=2026-10-31&holiday=true`):
+
+| Parámetro | Efecto |
+| --- | --- |
+| `collaboratorId` | Solo los turnos de ese colaborador. Un id inexistente devuelve una lista vacía (es un filtro, no un recurso). |
+| `from`, `to` | Fecha de inicio del turno entre ambas, inclusivas (el mismo criterio que la exportación). Con una sola, el período queda abierto. `from > to` → 400. |
+| `holiday` | `true`: solo los turnos en festivo; `false`: solo los que no. Los turnos con festivo desconocido (Nager.Date caída) no cumplen ninguno de los dos, y `holidaysAvailable: false` avisa de que el resultado puede estar incompleto. |
 
 ### Formato del Excel
 
@@ -150,6 +160,14 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
   completo (dar de alta un colaborador → crear o importar sus turnos → ver los festivos de su país → exportar) sin pasar por Swagger.
   Para no añadir pantallas, el botón **"+ Nuevo colaborador"** está junto a "+ Nuevo turno" y abre, igual que este, un formulario
   debajo de la barra (nombre, email y país). La validación de verdad (país ISO existente, email repetido → 409) sigue en la API.
+- **Filtros del listado en el servidor.** La primera versión listaba todos los turnos, y el único campo de fecha de la pantalla
+  (Desde/Hasta) era solo de la exportación. Con la importación el volumen crece rápido, así que añadí filtros por colaborador,
+  período y festivo. Van en la API (`GET /api/shifts`) y no en el navegador: quedan documentados en Swagger y cubiertos por
+  pruebas, el colaborador y el período se filtran en SQL, los festivos solo se consultan para los (país, año) que quedan tras
+  filtrar, y el festivo se filtra después de calcularlo. En la pantalla hay una sola barra de filtros que recarga la lista al
+  cambiar: Desde/Hasta dejan de ser exclusivos de la exportación (dos pares de fechas confundirían) y **Exportar descarga el
+  período y el colaborador filtrados**. El filtro de festivo no se aplica al archivo: la exportación no debe depender de la API
+  externa. La validación del período (`from > to`) es la misma en el listado y en la exportación.
 - **Docker.** `Dockerfile` multi-etapa: `node:22` (build de Angular) → `sdk:9.0` (publish) → `aspnet:9.0` (`final`, con Angular en
   `wwwroot`); más una etapa `test` que ejecuta `dotnet test`.
 
@@ -164,7 +182,8 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
 | ¿Zonas horarias? | Las horas son locales al país del colaborador y no se convierten; el horario de verano se ignora. |
 | ¿Qué fecha cuenta para el festivo? | La de inicio del turno (un turno nocturno que empieza la víspera de un festivo no se marca). |
 | ¿Qué festivos? | Solo los nacionales (`global: true`), porque el colaborador no tiene región. |
-| ¿Qué fecha filtra la exportación? | La fecha de inicio del turno (`date`), con `from` y `to` obligatorios e inclusivos; `from > to` devuelve 400. |
+| ¿Qué fecha filtra la exportación? | La fecha de inicio del turno (`date`), con `from` y `to` obligatorios e inclusivos; `from > to` devuelve 400. El listado usa el mismo criterio, con las fechas opcionales. |
+| ¿Qué devuelve el filtro de festivos cuando Nager.Date falla? | Los turnos de festivo desconocido no entran ni en `holiday=true` ni en `holiday=false`; `holidaysAvailable: false` lo advierte. |
 | Formato de las horas en la API | `HH:mm` (los segundos se descartan). |
 
 ## Extras más allá del enunciado (y por qué)
@@ -203,18 +222,24 @@ xUnit + NSubstitute + `WebApplicationFactory`. Se prioriza la calidad sobre la c
   archivo que no es `.xlsx`.
 - **Festivos:** `HttpMessageHandler` falso (éxito, 404/204, fallo de red, JSON inválido, festivo regional ignorado, caché, el fallo no se cachea,
   cancelación) y el *pipeline* real de resiliencia (reintento, tope de reintentos, timeout cuando la API nunca responde).
+- **Filtros del listado:** cada filtro por separado y combinados, extremos inclusivos, período abierto, `from > to`, valores mal formados,
+  colaborador inexistente, festivo desconocido fuera de `holiday=true/false`, consultas de festivos solo para lo que queda tras filtrar y
+  exportación por colaborador.
 - **Integración (API completa en memoria):** 409 por solapamiento en POST y PUT, borrado lógico, extremos inclusivos de la exportación, `from > to`,
   falla de festivos en un solo país, reimportación del archivo exportado, errores en español (también los del framework: cuerpo vacío,
   JSON mal formado, valor no válido, 415), Swagger en español y 500 sin filtrar detalles.
 
 No hay pruebas automatizadas del frontend: la regla de negocio está toda en el backend y el enunciado deja la elección de las pruebas más relevantes.
-El frontend se verificó a mano (crear, editar, 409, importar, exportar, fallo de Nager.Date y alta de colaboradores con email repetido y país no válido).
+El frontend se verificó a mano (crear, editar, 409, importar, exportar, fallo de Nager.Date, alta de colaboradores con email repetido y país no válido,
+y filtros combinados con la exportación del período y colaborador filtrados).
 
 ## Qué quedó fuera (y por qué)
 
 - **Edición y borrado de colaboradores, y borrado de turnos, desde la interfaz:** existen en la API y en Swagger. En la interfaz solo está
   el alta de colaboradores (ver [Decisiones de diseño](#decisiones-de-diseño)), que es lo que hace falta para recorrer el flujo completo.
-- **Filtros, paginación y orden elegido por el usuario:** el listado se devuelve en orden fijo (inicio del turno y luego nombre).
+- **Paginación y orden elegido por el usuario:** el listado se devuelve en orden fijo (inicio del turno y luego nombre); con los filtros basta
+  para el volumen esperado.
+- **Filtro de festivo en la exportación:** obligaría a consultar Nager.Date para generar el archivo.
 - **Autenticación y autorización**, i18n (la aplicación solo está en español) y pruebas del frontend.
 - **Concurrencia entre dos peticiones simultáneas:** el servicio comprueba el solapamiento y luego guarda; entre ambos pasos puede colarse otra
   petición. En producción se resolvería con una *exclusion constraint* (PostgreSQL) o una transacción serializable.

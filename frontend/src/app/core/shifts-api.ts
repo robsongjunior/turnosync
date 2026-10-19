@@ -1,7 +1,7 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ImportReport, Shift, ShiftList, ShiftRequest } from './models';
+import { ImportReport, Shift, ShiftFilter, ShiftList, ShiftRequest } from './models';
 
 export interface DownloadedFile {
   fileName: string;
@@ -12,8 +12,8 @@ export interface DownloadedFile {
 export class ShiftsApi {
   private readonly http = inject(HttpClient);
 
-  list(): Promise<ShiftList> {
-    return firstValueFrom(this.http.get<ShiftList>('/api/shifts'));
+  list(filter: ShiftFilter): Promise<ShiftList> {
+    return firstValueFrom(this.http.get<ShiftList>('/api/shifts', { params: toParams(filter) }));
   }
 
   create(body: ShiftRequest): Promise<Shift> {
@@ -30,11 +30,12 @@ export class ShiftsApi {
     return firstValueFrom(this.http.post<ImportReport>('/api/shifts/import', form));
   }
 
-  async export(from: string, to: string): Promise<DownloadedFile> {
+  /** El filtro de festivos no se aplica a la exportación: generar el archivo no depende de la API externa. */
+  async export(from: string, to: string, collaboratorId: number | null): Promise<DownloadedFile> {
     try {
       const response = await firstValueFrom(
         this.http.get('/api/shifts/export', {
-          params: { from, to },
+          params: toParams({ from, to, collaboratorId, holiday: null }),
           observe: 'response',
           responseType: 'blob',
         }),
@@ -50,6 +51,24 @@ export class ShiftsApi {
       throw await withJsonBody(error);
     }
   }
+}
+
+/** Solo envía los filtros con valor. */
+function toParams(filter: ShiftFilter): HttpParams {
+  let params = new HttpParams();
+  if (filter.collaboratorId !== null) {
+    params = params.set('collaboratorId', filter.collaboratorId);
+  }
+  if (filter.from) {
+    params = params.set('from', filter.from);
+  }
+  if (filter.to) {
+    params = params.set('to', filter.to);
+  }
+  if (filter.holiday !== null) {
+    params = params.set('holiday', filter.holiday);
+  }
+  return params;
 }
 
 /** Con responseType 'blob' el cuerpo de un error también llega como Blob; lo devuelve ya convertido a JSON. */

@@ -14,13 +14,19 @@ public sealed class ShiftService(
     IValidator<ShiftRequest> validator)
 {
     /// <summary>
-    /// Lista los turnos y marca los que empiezan en un festivo nacional del país del colaborador.
-    /// Una consulta por cada (país, año) presente en el listado. Si una consulta falla, los turnos de ese país
-    /// salen con IsHoliday null y HolidaysAvailable false; el listado nunca falla por ello.
+    /// Lista los turnos que cumplen el filtro y marca los que empiezan en un festivo nacional del país del colaborador.
+    /// El colaborador y el período se filtran en la base de datos; el festivo, después de calcularlo.
+    /// Una consulta por cada (país, año) presente tras filtrar por colaborador y período. Si una consulta falla, los
+    /// turnos de ese país salen con IsHoliday null y HolidaysAvailable false; el listado nunca falla por ello.
     /// </summary>
-    public async Task<ShiftListResponse> ListAsync(CancellationToken ct = default)
+    public async Task<Result<ShiftListResponse>> ListAsync(ShiftListFilter filter, CancellationToken ct = default)
     {
-        var list = await shifts.ListWithCollaboratorAsync(ct);
+        if (ShiftPeriod.Validate(filter.From, filter.To, required: false) is { } invalid)
+        {
+            return invalid;
+        }
+
+        var list = await shifts.ListWithCollaboratorAsync(filter.CollaboratorId, filter.From, filter.To, ct);
 
         var keys = list.Select(s => (s.Collaborator!.CountryCode, s.Date.Year)).Distinct().ToList();
         var lookups = await Task.WhenAll(keys.Select(async key =>
@@ -34,7 +40,9 @@ public sealed class ShiftService(
 
             return new ShiftListItem(
                 s.Id, s.CollaboratorId, s.Collaborator.Name, s.Date, s.StartTime, s.EndTime, isHoliday);
-        }).ToList();
+        })
+        .Where(i => filter.Holiday is null || i.IsHoliday == filter.Holiday)
+        .ToList();
 
         return new ShiftListResponse(items, HolidaysAvailable: holidaysByKey.Values.All(h => h is not null));
     }

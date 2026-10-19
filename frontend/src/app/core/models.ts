@@ -31,6 +31,17 @@ export interface ShiftList {
   holidaysAvailable: boolean;
 }
 
+/** Filtros del listado; un valor vacío (null o '') no filtra. */
+export interface ShiftFilter {
+  collaboratorId: number | null;
+  /** yyyy-MM-dd, inclusive, sobre la fecha de inicio. */
+  from: string;
+  /** yyyy-MM-dd, inclusive, sobre la fecha de inicio. */
+  to: string;
+  /** true: solo festivos; false: solo no festivos. Los de festivo desconocido no cumplen ninguno. */
+  holiday: boolean | null;
+}
+
 export interface ShiftRequest {
   collaboratorId: number;
   date: string;

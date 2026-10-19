@@ -18,16 +18,54 @@
 
     <span class="spacer"></span>
 
+    <button
+      type="button"
+      (click)="export()"
+      [disabled]="!canExport()"
+      title="Exporta los turnos del período (Desde y Hasta) y del colaborador filtrados"
+    >
+      Exportar
+    </button>
+  </div>
+
+  <div class="toolbar filters" role="search">
+    <label class="inline">
+      Colaborador
+      <select (change)="setCollaboratorFilter($event)">
+        <option value="" [selected]="filter().collaboratorId === null">Todos</option>
+        @for (collaborator of collaborators(); track collaborator.id) {
+          <option [value]="collaborator.id" [selected]="filter().collaboratorId === collaborator.id">
+            {{ collaborator.name }} ({{ collaborator.countryCode }})
+          </option>
+        }
+      </select>
+    </label>
     <label class="inline">
       Desde
-      <input type="date" [value]="exportFrom()" (input)="setExportFrom($event)" />
+      <input type="date" [value]="filter().from" (input)="setFrom($event)" />
     </label>
     <label class="inline">
       Hasta
-      <input type="date" [value]="exportTo()" (input)="setExportTo($event)" />
+      <input type="date" [value]="filter().to" (input)="setTo($event)" />
     </label>
-    <button type="button" (click)="export()" [disabled]="!canExport()">Exportar</button>
+    <label class="inline">
+      Festivo
+      <select (change)="setHolidayFilter($event)">
+        <option value="" [selected]="filter().holiday === null">Todos</option>
+        <option value="true" [selected]="filter().holiday === true">Sí</option>
+        <option value="false" [selected]="filter().holiday === false">No</option>
+      </select>
+    </label>
+    <button type="button" class="link" (click)="clearFilters()" [disabled]="!filtered()">Limpiar filtros</button>
   </div>
+
+  @if (invalidPeriod()) {
+    <p class="field-error" role="alert">'Desde' debe ser anterior o igual a 'Hasta'.</p>
+  }
+  <p class="hint">
+    Exportar descarga los turnos del período (Desde y Hasta, obligatorios) y del colaborador filtrados; el filtro
+    Festivo no se aplica al archivo.
+  </p>
 
   @if (!holidaysAvailable()) {
     <p class="banner banner-warn" role="status">⚠ Festivos no disponibles para algunos turnos.</p>
@@ -79,7 +117,9 @@
         </tr>
       } @empty {
         <tr>
-          <td colspan="6" class="empty">{{ loading() ? 'Cargando…' : 'Todavía no hay turnos.' }}</td>
+          <td colspan="6" class="empty">
+            {{ loading() ? 'Cargando…' : filtered() ? 'Ningún turno coincide con los filtros.' : 'Todavía no hay turnos.' }}
+          </td>
         </tr>
       }
     </tbody>

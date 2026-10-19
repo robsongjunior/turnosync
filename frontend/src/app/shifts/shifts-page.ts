@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CollaboratorForm } from '../collaborators/collaborator-form';
 import { CollaboratorsApi } from '../core/collaborators-api';
 import { describeError } from '../core/errors';
-import { Collaborator, ImportReport, Shift } from '../core/models';
+import { Collaborator, ImportReport, Shift, ShiftFilter } from '../core/models';
 import { ShiftsApi } from '../core/shifts-api';
 import { ImportReportPanel } from './import-report';
 import { ShiftForm } from './shift-form';
@@ -30,26 +30,86 @@ export class ShiftsPage implements OnInit {
   /** Hay una importación o exportación en curso. */
   protected readonly busy = signal(false);
 
-  protected readonly exportFrom = signal('');
-  protected readonly exportTo = signal('');
-  protected readonly canExport = computed(() => this.exportFrom() !== '' && this.exportTo() !== '' && !this.busy());
+  /** Filtros del listado. Desde/Hasta y el colaborador también delimitan la exportación. */
+  protected readonly filter = signal<ShiftFilter>({ collaboratorId: null, from: '', to: '', holiday: null });
+  protected readonly filtered = computed(() => {
+    const f = this.filter();
+    return f.collaboratorId !== null || f.from !== '' || f.to !== '' || f.holiday !== null;
+  });
+  protected readonly invalidPeriod = computed(() => {
+    const { from, to } = this.filter();
+    return from !== '' && to !== '' && from > to;
+  });
+  protected readonly canExport = computed(
+    () => this.filter().from !== '' && this.filter().to !== '' && !this.invalidPeriod() && !this.busy(),
+  );
+
+  /** Descarta respuestas de listados anteriores cuando los filtros cambian rápido. */
+  private listRequest = 0;
 
   ngOnInit(): void {
     void this.load();
   }
 
   protected async load(): Promise<void> {
-    this.loading.set(true);
     try {
-      const [list, collaborators] = await Promise.all([this.shiftsApi.list(), this.collaboratorsApi.list()]);
-      this.shifts.set(list.items);
-      this.holidaysAvailable.set(list.holidaysAvailable);
-      this.collaborators.set(collaborators);
+      this.collaborators.set(await this.collaboratorsApi.list());
     } catch (error) {
       this.error.set(describeError(error));
-    } finally {
-      this.loading.set(false);
     }
+    await this.loadShifts();
+  }
+
+  private async loadShifts(): Promise<void> {
+    if (this.invalidPeriod()) {
+      return; // el aviso se muestra junto a los filtros; no tiene sentido pedir un 400
+    }
+
+    const request = ++this.listRequest;
+    this.loading.set(true);
+    try {
+      const list = await this.shiftsApi.list(this.filter());
+      if (request === this.listRequest) {
+        this.shifts.set(list.items);
+        this.holidaysAvailable.set(list.holidaysAvailable);
+      }
+    } catch (error) {
+      if (request === this.listRequest) {
+        this.error.set(describeError(error));
+      }
+    } finally {
+      if (request === this.listRequest) {
+        this.loading.set(false);
+      }
+    }
+  }
+
+  protected setCollaboratorFilter(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.applyFilter({ collaboratorId: value === '' ? null : Number(value) });
+  }
+
+  protected setFrom(event: Event): void {
+    this.applyFilter({ from: (event.target as HTMLInputElement).value });
+  }
+
+  protected setTo(event: Event): void {
+    this.applyFilter({ to: (event.target as HTMLInputElement).value });
+  }
+
+  protected setHolidayFilter(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.applyFilter({ holiday: value === '' ? null : value === 'true' });
+  }
+
+  protected clearFilters(): void {
+    this.filter.set({ collaboratorId: null, from: '', to: '', holiday: null });
+    void this.loadShifts();
+  }
+
+  private applyFilter(change: Partial<ShiftFilter>): void {
+    this.filter.update((current) => ({ ...current, ...change }));
+    void this.loadShifts();
   }
 
   protected newShift(): void {
@@ -100,30 +160,16 @@ export class ShiftsPage implements OnInit {
     }
   }
 
-  protected setExportFrom(event: Event): void {
-    this.exportFrom.set((event.target as HTMLInputElement).value);
-  }
-
-  protected setExportTo(event: Event): void {
-    this.exportTo.set((event.target as HTMLInputElement).value);
-  }
-
   protected async export(): Promise<void> {
-    const from = this.exportFrom();
-    const to = this.exportTo();
     if (!this.canExport()) {
       return;
     }
 
-    if (from > to) {
-      this.error.set("'Desde' debe ser anterior o igual a 'Hasta'.");
-      return;
-    }
-
+    const { from, to, collaboratorId } = this.filter();
     this.busy.set(true);
     this.error.set(null);
     try {
-      const { blob, fileName } = await this.shiftsApi.export(from, to);
+      const { blob, fileName } = await this.shiftsApi.export(from, to, collaboratorId);
       this.download(blob, fileName);
     } catch (error) {
       this.error.set(describeError(error));
