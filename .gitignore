@@ -7,6 +7,11 @@ obj/
 TestResults/
 *.log
 
+# Base SQLite local
+*.db
+*.db-shm
+*.db-wal
+
 # Angular / Node
 node_modules/
 frontend/dist/

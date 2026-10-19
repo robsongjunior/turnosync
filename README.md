@@ -21,6 +21,7 @@ docker-compose up
 
 La API sirve el build de Angular desde `wwwroot`, así que frontend y API comparten origen (sin CORS y sin nginx).
 Al arrancar se aplican las migraciones y se cargan 5 colaboradores de ejemplo (ES, BR, AR, MX, PT).
+Los datos se guardan en el volumen `turnosync-data` y se conservan entre ejecuciones; `docker-compose down -v` los borra.
 
 ### En local (sin Docker)
 
@@ -56,7 +57,7 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 | 4 | Importar `.xlsx` con informe fila a fila | Columnas `Email`, `Fecha`, `HoraInicio`, `HoraFin`; informe `imported` / `failed` con los motivos |
 | 5 | Exportar `.xlsx` filtrado por rango de fechas | `GET /api/shifts/export?from=&to=`, mismas 4 columnas |
 | 6 | Festivos del país del colaborador (API externa) | Nager.Date; `isHoliday` en el listado; si la API falla, `isHoliday: null` y `holidaysAvailable: false` |
-| 7 | Base de datos relacional | SQLite en memoria vía EF Core (con migraciones) |
+| 7 | Base de datos relacional | SQLite en archivo vía EF Core (con migraciones), en un volumen de Docker |
 | 8 | `docker-compose up` | Un servicio `app` (API + Angular) |
 | 9 | OpenAPI/Swagger | Swashbuckle en `/swagger`, con descripciones en español tomadas de los comentarios XML |
 | 10 | Pruebas automatizadas | xUnit; ver [Pruebas](#pruebas) |
@@ -169,14 +170,16 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
 
 ## Persistencia
 
-SQLite **en memoria** (`Data Source=TurnoSync;Mode=Memory;Cache=Shared`) con migraciones de EF Core. Es una base relacional real (índice único
-parcial para el email, claves foráneas, transacciones) sin necesidad de un contenedor aparte. Una conexión *singleton* se mantiene abierta
-para que la base viva mientras la API esté arriba y cada `DbContext` abre la suya (seguro con peticiones concurrentes).
+SQLite **en archivo** con migraciones de EF Core. Es una base relacional real (índice único parcial para el email, claves foráneas,
+transacciones) sin necesidad de un contenedor aparte.
 
-**Los datos se pierden al reiniciar la API**; el *seed* vuelve a crear el estado inicial.
-
-- **Pasar a archivo:** cambiar la cadena de conexión, por ejemplo `ConnectionStrings__TurnoSync=Data Source=/data/turnosync.db`
-  (variable de entorno o `appsettings.json`) y montar un volumen en `/data` en el `docker-compose.yml`.
+- **Con Docker:** `ConnectionStrings__TurnoSync=Data Source=/data/turnosync.db` en el `docker-compose.yml`, con `/data` montado en el
+  volumen `turnosync-data`. La base sobrevive a reinicios, a `docker-compose down` y a nuevos builds; solo `docker-compose down -v` la borra.
+  Para copiarla al equipo: `docker-compose cp app:/data/turnosync.db ./turnosync.db`.
+- **En local:** `Data Source=turnosync.db` (`appsettings.json`), relativo al directorio desde el que se arranca la API (ignorado en git).
+- Las migraciones se aplican al arrancar; los colaboradores de ejemplo se insertan solo al crear la base, no en cada arranque.
+- Las pruebas siguen usando SQLite en memoria (una base por prueba). Con una cadena `Mode=Memory` la API mantiene abierta una conexión
+  *singleton* para que la base viva mientras está arriba; con un archivo no hace falta.
 - **Pasar a PostgreSQL:** sustituir `Microsoft.EntityFrameworkCore.Sqlite` por `Npgsql.EntityFrameworkCore.PostgreSQL` en `TurnoSync.Infra`, cambiar
   `UseSqlite` por `UseNpgsql`, regenerar la migración y añadir el servicio de base de datos al compose. El filtro del índice único parcial
   (`is_deleted = 0`) pasaría a `is_deleted = false`.

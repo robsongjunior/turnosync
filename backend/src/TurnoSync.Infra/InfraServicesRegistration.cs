@@ -17,22 +17,25 @@ public static class InfraServicesRegistration
 {
     public const string ConnectionStringName = "TurnoSync";
 
-    // Base de datos en memoria con caché compartida: todos los DbContext ven la misma base.
-    // Para persistir en un archivo basta con sustituirla por, por ejemplo, "Data Source=/data/turnosync.db".
-    public const string DefaultConnectionString = "Data Source=TurnoSync;Mode=Memory;Cache=Shared";
+    // Archivo SQLite relativo al directorio de trabajo. En Docker se sustituye por "Data Source=/data/turnosync.db" (volumen).
+    public const string DefaultConnectionString = "Data Source=turnosync.db";
 
     public const string NagerBaseUrlKey = "Nager:BaseUrl";
     public const string DefaultNagerBaseUrl = "https://date.nager.at/";
 
     public static IServiceCollection AddInfra(this IServiceCollection services)
     {
-        // Una conexión singleton queda abierta solo para mantener viva la base en memoria mientras la API esté en marcha.
+        // Con una base en memoria (la usan las pruebas), una conexión singleton queda abierta para mantenerla viva
+        // mientras la API esté en marcha. Con un archivo no hace falta.
         services.AddSingleton(sp => OpenKeepAliveConnection(GetConnectionString(sp)));
 
         services.AddDbContext<TurnoSyncContext>((sp, options) =>
         {
             // Asegura que la conexión que mantiene viva la base exista antes de que cualquier DbContext abra la suya.
-            _ = sp.GetRequiredService<SqliteConnection>();
+            if (IsInMemory(GetConnectionString(sp)))
+            {
+                _ = sp.GetRequiredService<SqliteConnection>();
+            }
 
             options
                 .UseSqlite(GetConnectionString(sp))
@@ -83,6 +86,12 @@ public static class InfraServicesRegistration
 
     private static string GetConnectionString(IServiceProvider sp) =>
         sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName) ?? DefaultConnectionString;
+
+    private static bool IsInMemory(string connectionString)
+    {
+        var builder = new SqliteConnectionStringBuilder(connectionString);
+        return builder.Mode == SqliteOpenMode.Memory || builder.DataSource == ":memory:";
+    }
 
     private static SqliteConnection OpenKeepAliveConnection(string connectionString)
     {

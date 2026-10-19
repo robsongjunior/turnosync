@@ -5,6 +5,12 @@ services:
       target: final
     ports:
       - "8080:8080"
+    environment:
+      - ConnectionStrings__TurnoSync=Data Source=/data/turnosync.db
+    # La base SQLite vive en un volumen gestionado por Docker: sobrevive a `down`, reinicios y nuevos builds.
+    # Solo se borra con `docker-compose down -v`.
+    volumes:
+      - turnosync-data:/data
 
   # No se levanta con `docker-compose up`. Se ejecuta con: docker-compose run --rm tests
   tests:
@@ -12,3 +18,6 @@ services:
     build:
       context: .
       target: test
+
+volumes:
+  turnosync-data:

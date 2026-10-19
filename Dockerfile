@@ -34,6 +34,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish ./
 COPY --from=web /src/frontend/dist/turnosync-web/browser ./wwwroot
+# Directorio del volumen de la base SQLite; debe pertenecer al usuario sin privilegios para que pueda escribir en él.
+RUN mkdir /data && chown $APP_UID /data
 EXPOSE 8080
 USER $APP_UID
 ENTRYPOINT ["dotnet", "TurnoSync.Api.dll"]
