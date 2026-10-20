@@ -19,6 +19,27 @@ simples de evolucionar y de mantener, pero siempre dejando abierta la puerta a u
 o **microservicios**, si el negocio lo llega a necesitar. Por eso aquí no hay MediatR, eventos de dominio ni varios
 servicios: la regla de negocio vive en el dominio, aislada, y puede moverse sin reescribirse.
 
+## Decisiones técnicas
+
+| Decisión | Por qué |
+| --- | --- |
+| **Arquitectura Limpia** en 4 proyectos (`Domain`, `Application`, `Infra`, `Api`) | Las dependencias apuntan hacia dentro: el dominio no depende de ningún paquete y la `Application` define las interfaces que la `Infra` implementa. Cambiar la base de datos o la API de festivos no toca la regla de negocio. |
+| **Dominio rico** | La regla de solapamiento (`Shift.Overlaps`) y el cálculo de inicio/fin de un turno nocturno viven en la entidad, en **un único sitio**, y los usan tanto la API como la importación. Se prueban sin mocks ni base de datos. |
+| **FluentValidation** en vez de DataAnnotations | Más libertad para escribir reglas (entre campos, como "fin ≠ inicio", o que dependen del reloj) y **menos impacto en el dominio**: las entidades no se llenan de atributos de validación. El **mismo validator** sirve a la API y a cada fila del Excel. |
+| **`Result<T>`** para errores de negocio | Un error de negocio es un resultado esperado, no una excepción. Así cada fila de la importación tiene su propio resultado, y un `BaseController` lo traduce a 400/404/409 con `ProblemDetails`. |
+| **`GlobalExceptionHandler`** | Lo inesperado devuelve un 500 sin *stack trace*: ningún detalle interno sale de la API. |
+| **`TimeProvider`** inyectado | La regla "no se permiten turnos en el pasado" se prueba con un reloj fijo, sin depender de la hora real. |
+| **Resiliencia en la API externa** (`Microsoft.Extensions.Http.Resilience` + caché en memoria) | Nager.Date lenta o caída no bloquea ni rompe el listado: timeout, un reintento y caché de 24 h. Las consultas de varios países van en paralelo. |
+| **SQLite en archivo** con migraciones de EF Core | Base relacional real (claves foráneas, índice único parcial, transacciones) sin un contenedor extra. Migrar a PostgreSQL es cambiar el *provider* y regenerar la migración. |
+| **Borrado lógico** | Conserva el historial y la integridad referencial. |
+| **Calidad en el *build*** | `nullable`, advertencias como errores y un `.editorconfig` basado en las guías de Microsoft: el estilo se exige al compilar, no en la revisión. |
+| **Frontend mínimo** | Angular 22 *standalone*, *signals*, sin zone.js y sin librería de UI. La API sirve el build de Angular: mismo origen, sin CORS ni nginx. |
+| **Docker multi-etapa** | Un solo `docker-compose up` levanta todo, y `docker-compose run --rm tests` ejecuta las pruebas sin tener el SDK instalado. |
+| **Pruebas con foco** (xUnit, NSubstitute, `WebApplicationFactory`) | Calidad antes que cantidad: todos los casos límite del solapamiento, los fallos de la API externa (red, timeout, JSON inválido) y la API completa en memoria sobre SQLite real. |
+
+Límite conocido: dos peticiones simultáneas podrían colar un solapamiento entre la comprobación y el guardado. En producción se
+resolvería con una *exclusion constraint* de PostgreSQL o una transacción serializable.
+
 ## Decisiones de negocio no definidas en el enunciado
 
 El enunciado deja huecos. Estas son las decisiones que tomó el desarrollador:
