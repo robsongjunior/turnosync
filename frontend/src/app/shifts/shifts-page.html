@@ -12,7 +12,7 @@
 
   <div class="toolbar">
     <button type="button" class="primary" (click)="newShift()">+ Nuevo turno</button>
-    <button type="button" class="primary" (click)="collaboratorFormOpen.set(true)">+ Nuevo colaborador</button>
+    <button type="button" class="primary" (click)="employeeFormOpen.set(true)">+ Nuevo colaborador</button>
     <button type="button" (click)="fileInput.click()" [disabled]="busy()">Importar</button>
     <input #fileInput type="file" accept=".xlsx" hidden (change)="onFileSelected($event)" />
 
@@ -31,11 +31,11 @@
   <div class="toolbar filters" role="search">
     <label class="inline">
       Colaborador
-      <select (change)="setCollaboratorFilter($event)">
-        <option value="" [selected]="filter().collaboratorId === null">Todos</option>
-        @for (collaborator of collaborators(); track collaborator.id) {
-          <option [value]="collaborator.id" [selected]="filter().collaboratorId === collaborator.id">
-            {{ collaborator.name }} ({{ collaborator.countryCode }})
+      <select (change)="setEmployeeFilter($event)">
+        <option value="" [selected]="filter().employeeId === null">Todos</option>
+        @for (employee of employees(); track employee.id) {
+          <option [value]="employee.id" [selected]="filter().employeeId === employee.id">
+            {{ employee.name }} ({{ employee.countryCode }})
           </option>
         }
       </select>
@@ -71,14 +71,14 @@
     <p class="banner banner-warn" role="status">⚠ Festivos no disponibles para algunos turnos.</p>
   }
 
-  @if (collaboratorFormOpen()) {
-    <app-collaborator-form (saved)="onCollaboratorSaved()" (cancelled)="collaboratorFormOpen.set(false)" />
+  @if (employeeFormOpen()) {
+    <app-employee-form (saved)="onEmployeeSaved()" (cancelled)="employeeFormOpen.set(false)" />
   }
 
   @if (formOpen()) {
     <app-shift-form
       [shift]="editing()"
-      [collaborators]="collaborators()"
+      [employees]="employees()"
       (saved)="onSaved()"
       (cancelled)="closeForm()"
     />
@@ -102,7 +102,7 @@
     <tbody>
       @for (shift of shifts(); track shift.id) {
         <tr>
-          <td>{{ shift.collaboratorName }}</td>
+          <td>{{ shift.employeeName }}</td>
           <td>{{ shift.date }}</td>
           <td>{{ shift.startTime }}</td>
           <td>{{ shift.endTime }}</td>

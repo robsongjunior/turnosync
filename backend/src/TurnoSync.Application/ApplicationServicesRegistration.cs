@@ -1,7 +1,7 @@
 using System.Globalization;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using TurnoSync.Application.Collaborators;
+using TurnoSync.Application.Employees;
 using TurnoSync.Application.Shifts;
 
 namespace TurnoSync.Application;
@@ -15,10 +15,10 @@ public static class ApplicationServicesRegistration
         ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("es");
 
         // Los validadores no guardan estado, así que basta con un singleton.
-        services.AddSingleton<IValidator<CollaboratorRequest>, CollaboratorRequestValidator>();
+        services.AddSingleton<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
         services.AddSingleton<IValidator<ShiftRequest>, ShiftRequestValidator>();
 
-        services.AddScoped<CollaboratorService>();
+        services.AddScoped<EmployeeService>();
         services.AddScoped<ShiftService>();
         services.AddScoped<ShiftImportService>();
         services.AddScoped<ShiftExportService>();

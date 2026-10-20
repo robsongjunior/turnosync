@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TurnoSync.Domain.Collaborators;
+using TurnoSync.Domain.Employees;
 using TurnoSync.Domain.Shifts;
 using TurnoSync.Infra.Persistence.Repositories;
 using TurnoSync.Tests.Support;
@@ -15,32 +15,32 @@ public sealed class PersistenceTests : IDisposable
     public void Dispose() => _database.Dispose();
 
     [Fact]
-    public async Task Migrate_ShouldSeedCollaboratorsFromFiveCountries()
+    public async Task Migrate_ShouldSeedEmployeesFromFiveCountries()
     {
         await using var context = _database.CreateContext();
 
-        var countries = await context.Collaborators.OrderBy(c => c.Id).Select(c => c.CountryCode).ToListAsync();
+        var countries = await context.Employees.OrderBy(c => c.Id).Select(c => c.CountryCode).ToListAsync();
 
         Assert.Equal(["ES", "BR", "AR", "MX", "PT"], countries);
     }
 
     [Fact]
-    public async Task SaveChanges_ShouldFail_WhenEmailAlreadyUsedByActiveCollaborator()
+    public async Task SaveChanges_ShouldFail_WhenEmailAlreadyUsedByActiveEmployee()
     {
         await using var context = _database.CreateContext();
-        var repository = new CollaboratorRepository(context);
+        var repository = new EmployeeRepository(context);
 
-        repository.Add(Collaborator.Create("Other Ana", "ana@turnosync.dev", "ES"));
+        repository.Add(Employee.Create("Other Ana", "ana@turnosync.dev", "ES"));
 
         await Assert.ThrowsAsync<DbUpdateException>(() => repository.SaveChangesAsync());
     }
 
     [Fact]
-    public async Task Delete_ShouldHideCollaboratorAndFreeItsEmail()
+    public async Task Delete_ShouldHideEmployeeAndFreeItsEmail()
     {
         await using (var context = _database.CreateContext())
         {
-            var repository = new CollaboratorRepository(context);
+            var repository = new EmployeeRepository(context);
             var ana = await repository.GetByIdAsync(1);
             ana!.Delete();
             await repository.SaveChangesAsync();
@@ -48,22 +48,22 @@ public sealed class PersistenceTests : IDisposable
 
         await using (var context = _database.CreateContext())
         {
-            var repository = new CollaboratorRepository(context);
+            var repository = new EmployeeRepository(context);
 
             Assert.Null(await repository.GetByIdAsync(1));
             Assert.DoesNotContain(await repository.ListAsync(), c => c.Id == 1);
             Assert.False(await repository.EmailExistsAsync("ana@turnosync.dev", excludeId: null));
 
-            repository.Add(Collaborator.Create("New Ana", "ana@turnosync.dev", "ES"));
+            repository.Add(Employee.Create("New Ana", "ana@turnosync.dev", "ES"));
             await repository.SaveChangesAsync();
         }
     }
 
     [Fact]
-    public async Task EmailExists_ShouldIgnoreTheCollaboratorBeingUpdated()
+    public async Task EmailExists_ShouldIgnoreTheEmployeeBeingUpdated()
     {
         await using var context = _database.CreateContext();
-        var repository = new CollaboratorRepository(context);
+        var repository = new EmployeeRepository(context);
 
         Assert.True(await repository.EmailExistsAsync("ana@turnosync.dev", excludeId: null));
         Assert.True(await repository.EmailExistsAsync("ana@turnosync.dev", excludeId: 2));
@@ -71,10 +71,10 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetByEmails_ShouldReturnOnlyMatchingCollaborators()
+    public async Task GetByEmails_ShouldReturnOnlyMatchingEmployees()
     {
         await using var context = _database.CreateContext();
-        var repository = new CollaboratorRepository(context);
+        var repository = new EmployeeRepository(context);
 
         var found = await repository.GetByEmailsAsync(["ana@turnosync.dev", "ines@turnosync.dev", "nobody@x.com"]);
 
@@ -93,19 +93,19 @@ public sealed class PersistenceTests : IDisposable
 
         await using (var context = _database.CreateContext())
         {
-            var shifts = await new ShiftRepository(context).ListWithCollaboratorAsync();
+            var shifts = await new ShiftRepository(context).ListWithEmployeeAsync();
 
             var shift = Assert.Single(shifts);
             Assert.Equal(Day, shift.Date);
             Assert.Equal(new TimeOnly(22, 0), shift.StartTime);
             Assert.Equal(new TimeOnly(6, 0), shift.EndTime);
             Assert.Equal(new DateTime(2026, 10, 13, 6, 0, 0), shift.EndsAt);
-            Assert.Equal("Ana Torres", shift.Collaborator!.Name);
+            Assert.Equal("Ana Torres", shift.Employee!.Name);
         }
     }
 
     [Fact]
-    public async Task ListWithCollaborator_ShouldFilterByPeriodInclusiveOnBothEnds_AndOrderByStartThenName()
+    public async Task ListWithEmployee_ShouldFilterByPeriodInclusiveOnBothEnds_AndOrderByStartThenName()
     {
         await using var context = _database.CreateContext();
         var repository = new ShiftRepository(context);
@@ -119,15 +119,15 @@ public sealed class PersistenceTests : IDisposable
         ]);
         await repository.SaveChangesAsync();
 
-        var result = await repository.ListWithCollaboratorAsync(from: Day, to: Day.AddDays(2));
+        var result = await repository.ListWithEmployeeAsync(from: Day, to: Day.AddDays(2));
 
         Assert.Equal(
             [("Ana Torres", Day), ("Lucía Fernández", Day), ("João Lima", Day.AddDays(2))],
-            result.Select(s => (s.Collaborator!.Name, s.Date)));
+            result.Select(s => (s.Employee!.Name, s.Date)));
     }
 
     [Fact]
-    public async Task ListForOverlap_ShouldExcludeOtherCollaboratorsDeletedShiftsAndTheExcludedId()
+    public async Task ListForOverlap_ShouldExcludeOtherEmployeesDeletedShiftsAndTheExcludedId()
     {
         await using var context = _database.CreateContext();
         var repository = new ShiftRepository(context);
@@ -144,7 +144,7 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
-    public async Task ListByCollaborator_ShouldReturnTrackedActiveShiftsOfThatCollaborator()
+    public async Task ListByEmployee_ShouldReturnTrackedActiveShiftsOfThatEmployee()
     {
         await using var context = _database.CreateContext();
         var repository = new ShiftRepository(context);
@@ -156,7 +156,7 @@ public sealed class PersistenceTests : IDisposable
         ]);
         await repository.SaveChangesAsync();
 
-        var result = await repository.ListByCollaboratorAsync(1);
+        var result = await repository.ListByEmployeeAsync(1);
 
         Assert.Equal(2, result.Count);
         Assert.All(result, s => Assert.Equal(EntityState.Unchanged, context.Entry(s).State));

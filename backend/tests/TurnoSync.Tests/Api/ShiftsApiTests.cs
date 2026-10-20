@@ -19,12 +19,12 @@ public sealed class ShiftsApiTests : IDisposable
         _factory.Dispose();
     }
 
-    private Task<HttpResponseMessage> PostShiftAsync(int collaboratorId, string date, string start, string end) =>
-        _client.PostAsJsonAsync("/api/shifts", new { collaboratorId, date, startTime = start, endTime = end });
+    private Task<HttpResponseMessage> PostShiftAsync(int employeeId, string date, string start, string end) =>
+        _client.PostAsJsonAsync("/api/shifts", new { employeeId, date, startTime = start, endTime = end });
 
-    private async Task<ShiftResponse> CreateShiftAsync(int collaboratorId, string date, string start, string end)
+    private async Task<ShiftResponse> CreateShiftAsync(int employeeId, string date, string start, string end)
     {
-        var response = await PostShiftAsync(collaboratorId, date, start, end);
+        var response = await PostShiftAsync(employeeId, date, start, end);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ShiftResponse>(TestJson.Options))!;
     }
@@ -59,7 +59,7 @@ public sealed class ShiftsApiTests : IDisposable
     [InlineData("10:00", "12:00")] // contenido
     [InlineData("06:00", "18:00")] // contiene
     [InlineData("08:00", "16:00")] // idéntico
-    public async Task Create_ShouldReturn409_WhenOverlapsAnExistingShiftOfTheSameCollaborator(string start, string end)
+    public async Task Create_ShouldReturn409_WhenOverlapsAnExistingShiftOfTheSameEmployee(string start, string end)
     {
         await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");
 
@@ -84,7 +84,7 @@ public sealed class ShiftsApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_ShouldReturn201_WhenSameTimeForDifferentCollaborators()
+    public async Task Create_ShouldReturn201_WhenSameTimeForDifferentEmployees()
     {
         await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");
 
@@ -141,7 +141,7 @@ public sealed class ShiftsApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
-        Assert.Equal(["collaboratorId", "date", "endTime", "startTime"], problem!.Errors.Keys.Order());
+        Assert.Equal(["date", "employeeId", "endTime", "startTime"], problem!.Errors.Keys.Order());
     }
 
     [Theory]
@@ -164,7 +164,7 @@ public sealed class ShiftsApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Create_ShouldReturn404_WhenCollaboratorDoesNotExist()
+    public async Task Create_ShouldReturn404_WhenEmployeeDoesNotExist()
     {
         var response = await PostShiftAsync(99, "2026-10-12", "08:00", "16:00");
 
@@ -185,7 +185,7 @@ public sealed class ShiftsApiTests : IDisposable
     }
 
     [Fact]
-    public async Task List_ShouldBeOrderedByStartThenCollaboratorName()
+    public async Task List_ShouldBeOrderedByStartThenEmployeeName()
     {
         await CreateShiftAsync(2, "2026-10-13", "08:00", "16:00");
         await CreateShiftAsync(3, "2026-10-12", "08:00", "16:00");
@@ -195,7 +195,7 @@ public sealed class ShiftsApiTests : IDisposable
 
         Assert.Equal(
             ["Ana Torres", "Lucía Fernández", "João Lima"],
-            list!.Items.Select(s => s.CollaboratorName));
+            list!.Items.Select(s => s.EmployeeName));
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public sealed class ShiftsApiTests : IDisposable
         var shift = await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");
 
         var response = await _client.PutAsJsonAsync(
-            $"/api/shifts/{shift.Id}", new { collaboratorId = 1, date = "2026-10-12", startTime = "09:00", endTime = "15:00" });
+            $"/api/shifts/{shift.Id}", new { employeeId = 1, date = "2026-10-12", startTime = "09:00", endTime = "15:00" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var updated = await response.Content.ReadFromJsonAsync<ShiftResponse>(TestJson.Options);
@@ -219,7 +219,7 @@ public sealed class ShiftsApiTests : IDisposable
         var second = await CreateShiftAsync(1, "2026-10-12", "13:00", "17:00");
 
         var response = await _client.PutAsJsonAsync(
-            $"/api/shifts/{second.Id}", new { collaboratorId = 1, date = "2026-10-12", startTime = "11:00", endTime = "17:00" });
+            $"/api/shifts/{second.Id}", new { employeeId = 1, date = "2026-10-12", startTime = "11:00", endTime = "17:00" });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var unchanged = await _client.GetFromJsonAsync<ShiftResponse>($"/api/shifts/{second.Id}", TestJson.Options);
@@ -227,13 +227,13 @@ public sealed class ShiftsApiTests : IDisposable
     }
 
     [Fact]
-    public async Task Update_ShouldReturn409_WhenReassignedToACollaboratorWhoIsBusy()
+    public async Task Update_ShouldReturn409_WhenReassignedToAnEmployeeWhoIsBusy()
     {
         await CreateShiftAsync(2, "2026-10-12", "08:00", "16:00");
         var shift = await CreateShiftAsync(1, "2026-10-12", "10:00", "14:00");
 
         var response = await _client.PutAsJsonAsync(
-            $"/api/shifts/{shift.Id}", new { collaboratorId = 2, date = "2026-10-12", startTime = "10:00", endTime = "14:00" });
+            $"/api/shifts/{shift.Id}", new { employeeId = 2, date = "2026-10-12", startTime = "10:00", endTime = "14:00" });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -244,7 +244,7 @@ public sealed class ShiftsApiTests : IDisposable
         var shift = await CreateShiftAsync(1, "2026-10-12", "08:00", "16:00");
 
         var response = await _client.PutAsJsonAsync(
-            $"/api/shifts/{shift.Id}", new { collaboratorId = 1, date = "2026-10-12", startTime = "08:00", endTime = "08:00" });
+            $"/api/shifts/{shift.Id}", new { employeeId = 1, date = "2026-10-12", startTime = "08:00", endTime = "08:00" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -253,7 +253,7 @@ public sealed class ShiftsApiTests : IDisposable
     public async Task Update_ShouldReturn404_WhenShiftDoesNotExist()
     {
         var response = await _client.PutAsJsonAsync(
-            "/api/shifts/999", new { collaboratorId = 1, date = "2026-10-12", startTime = "08:00", endTime = "16:00" });
+            "/api/shifts/999", new { employeeId = 1, date = "2026-10-12", startTime = "08:00", endTime = "16:00" });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

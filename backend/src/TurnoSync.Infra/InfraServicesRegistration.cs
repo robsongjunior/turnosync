@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TurnoSync.Application.Collaborators;
+using TurnoSync.Application.Employees;
 using TurnoSync.Application.Holidays;
 using TurnoSync.Application.Shifts;
 using TurnoSync.Infra.Holidays;
@@ -40,11 +40,11 @@ public static class InfraServicesRegistration
             options
                 .UseSqlite(GetConnectionString(sp))
                 .UseSnakeCaseNamingConvention()
-                // Shift y Collaborator tienen un filtro de consulta de borrado lógico y se borran juntos (cascada en el servicio).
+                // Shift y Employee tienen un filtro de consulta de borrado lógico y se borran juntos (cascada en el servicio).
                 .ConfigureWarnings(w => w.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
         });
 
-        services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IShiftRepository, ShiftRepository>();
 
         services.AddNagerDateHolidays();

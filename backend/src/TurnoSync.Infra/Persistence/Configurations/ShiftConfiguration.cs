@@ -11,12 +11,12 @@ internal sealed class ShiftConfiguration : IEntityTypeConfiguration<Shift>
         builder.ToTable("shifts");
         builder.HasKey(s => s.Id);
 
-        builder.HasOne(s => s.Collaborator)
+        builder.HasOne(s => s.Employee)
             .WithMany()
-            .HasForeignKey(s => s.CollaboratorId)
+            .HasForeignKey(s => s.EmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(s => new { s.CollaboratorId, s.Date });
+        builder.HasIndex(s => new { s.EmployeeId, s.Date });
 
         builder.HasQueryFilter(s => !s.IsDeleted);
     }

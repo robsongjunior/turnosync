@@ -49,7 +49,7 @@ public sealed class StaticFilesTests : IDisposable
     {
         using var client = CreateClient();
 
-        var response = await client.GetAsync("/api/collaborators");
+        var response = await client.GetAsync("/api/employees");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

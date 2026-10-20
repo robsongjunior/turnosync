@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using TurnoSync.Application.Collaborators;
+using TurnoSync.Application.Employees;
 using TurnoSync.Tests.Support;
 
 namespace TurnoSync.Tests.Api;
@@ -20,13 +20,13 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
     [Fact]
     public async Task UnexpectedException_ShouldReturn500ProblemDetailsWithoutLeakingDetails()
     {
-        var failing = Substitute.For<ICollaboratorRepository>();
+        var failing = Substitute.For<IEmployeeRepository>();
         failing.ListAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new InvalidOperationException("secret db detail"));
         using var factory = _factory.WithWebHostBuilder(builder =>
-            builder.ConfigureTestServices(services => services.AddScoped<ICollaboratorRepository>(_ => failing)));
+            builder.ConfigureTestServices(services => services.AddScoped<IEmployeeRepository>(_ => failing)));
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/api/collaborators");
+        var response = await client.GetAsync("/api/employees");
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
@@ -40,14 +40,14 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
     [Fact]
     public async Task ClientRequestFailure_ShouldKeepItsStatusAndReturnASpanishTitle()
     {
-        var failing = Substitute.For<ICollaboratorRepository>();
+        var failing = Substitute.For<IEmployeeRepository>();
         failing.ListAsync(Arg.Any<CancellationToken>()).ThrowsAsync(
             new BadHttpRequestException("Request body too large.", StatusCodes.Status413PayloadTooLarge));
         using var factory = _factory.WithWebHostBuilder(builder =>
-            builder.ConfigureTestServices(services => services.AddScoped<ICollaboratorRepository>(_ => failing)));
+            builder.ConfigureTestServices(services => services.AddScoped<IEmployeeRepository>(_ => failing)));
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/api/collaborators");
+        var response = await client.GetAsync("/api/employees");
 
         Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -60,7 +60,7 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
         using var client = _factory.CreateClient();
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
-        var response = await client.PostAsync("/api/collaborators", content);
+        var response = await client.PostAsync("/api/employees", content);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -87,14 +87,14 @@ public sealed class ErrorHandlingAndDocsTests : IDisposable
     }
 
     [Fact]
-    public async Task Swagger_ShouldDocumentCollaboratorAndShiftEndpoints()
+    public async Task Swagger_ShouldDocumentEmployeeAndShiftEndpoints()
     {
         using var client = _factory.CreateClient();
 
         var json = await client.GetStringAsync("/swagger/v1/swagger.json");
 
-        Assert.Contains("\"/api/collaborators\"", json);
-        Assert.Contains("\"/api/collaborators/{id}\"", json);
+        Assert.Contains("\"/api/employees\"", json);
+        Assert.Contains("\"/api/employees/{id}\"", json);
         Assert.Contains("\"/api/shifts\"", json);
         Assert.Contains("\"/api/shifts/{id}\"", json);
         Assert.Contains("\"/api/shifts/import\"", json);

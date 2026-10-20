@@ -1,6 +1,6 @@
 import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { Collaborator, Shift, ShiftRequest } from '../core/models';
+import { Employee, Shift, ShiftRequest } from '../core/models';
 import { describeError, fieldErrorsOf } from '../core/errors';
 import { ShiftsApi } from '../core/shifts-api';
 
@@ -20,14 +20,14 @@ export class ShiftForm {
 
   /** El turno que se está editando; null para crear uno nuevo. */
   readonly shift = input<Shift | null>(null);
-  readonly collaborators = input.required<Collaborator[]>();
+  readonly employees = input.required<Employee[]>();
 
   readonly saved = output<void>();
   readonly cancelled = output<void>();
 
   protected readonly form = inject(FormBuilder).nonNullable.group(
     {
-      collaboratorId: [0, [Validators.required, Validators.min(1)]],
+      employeeId: [0, [Validators.required, Validators.min(1)]],
       date: ['', Validators.required],
       startTime: ['', Validators.required],
       endTime: ['', Validators.required],
@@ -47,7 +47,7 @@ export class ShiftForm {
       const shift = this.shift();
       untracked(() => {
         this.form.reset({
-          collaboratorId: shift?.collaboratorId ?? 0,
+          employeeId: shift?.employeeId ?? 0,
           date: shift?.date ?? '',
           startTime: shift?.startTime ?? '',
           endTime: shift?.endTime ?? '',
@@ -58,7 +58,7 @@ export class ShiftForm {
     });
   }
 
-  protected showError(name: 'collaboratorId' | 'date' | 'startTime' | 'endTime'): boolean {
+  protected showError(name: 'employeeId' | 'date' | 'startTime' | 'endTime'): boolean {
     const control = this.form.controls[name];
     return control.invalid && (control.touched || control.dirty);
   }

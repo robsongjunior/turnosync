@@ -1,11 +1,11 @@
 using TurnoSync.Domain.Common;
 
-namespace TurnoSync.Domain.Collaborators;
+namespace TurnoSync.Domain.Employees;
 
-public sealed class Collaborator : BaseEntity
+public sealed class Employee : BaseEntity
 {
     // Lo usa EF Core; la creación pasa por Create.
-    private Collaborator()
+    private Employee()
     {
     }
 
@@ -20,11 +20,11 @@ public sealed class Collaborator : BaseEntity
 
     public static string NormalizeCountryCode(string countryCode) => countryCode.Trim().ToUpperInvariant();
 
-    public static Collaborator Create(string name, string email, string countryCode)
+    public static Employee Create(string name, string email, string countryCode)
     {
-        var collaborator = new Collaborator();
-        collaborator.Update(name, email, countryCode);
-        return collaborator;
+        var employee = new Employee();
+        employee.Update(name, email, countryCode);
+        return employee;
     }
 
     public void Update(string name, string email, string countryCode)

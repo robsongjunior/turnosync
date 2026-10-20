@@ -1,11 +1,11 @@
-export interface Collaborator {
+export interface Employee {
   id: number;
   name: string;
   email: string;
   countryCode: string;
 }
 
-export interface CollaboratorRequest {
+export interface EmployeeRequest {
   name: string;
   email: string;
   /** Código ISO 3166-1 alfa-2, por ejemplo ES. */
@@ -14,8 +14,8 @@ export interface CollaboratorRequest {
 
 export interface Shift {
   id: number;
-  collaboratorId: number;
-  collaboratorName: string;
+  employeeId: number;
+  employeeName: string;
   /** yyyy-MM-dd */
   date: string;
   /** HH:mm */
@@ -33,7 +33,7 @@ export interface ShiftList {
 
 /** Filtros del listado; un valor vacío (null o '') no filtra. */
 export interface ShiftFilter {
-  collaboratorId: number | null;
+  employeeId: number | null;
   /** yyyy-MM-dd, inclusive, sobre la fecha de inicio. */
   from: string;
   /** yyyy-MM-dd, inclusive, sobre la fecha de inicio. */
@@ -43,7 +43,7 @@ export interface ShiftFilter {
 }
 
 export interface ShiftRequest {
-  collaboratorId: number;
+  employeeId: number;
   date: string;
   startTime: string;
   endTime: string;

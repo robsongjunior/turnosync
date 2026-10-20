@@ -8,16 +8,16 @@
   <div class="form-grid">
     <label>
       Colaborador
-      <select formControlName="collaboratorId">
+      <select formControlName="employeeId">
         <option [ngValue]="0" disabled>Selecciona un colaborador</option>
-        @for (collaborator of collaborators(); track collaborator.id) {
-          <option [ngValue]="collaborator.id">{{ collaborator.name }} ({{ collaborator.countryCode }})</option>
+        @for (employee of employees(); track employee.id) {
+          <option [ngValue]="employee.id">{{ employee.name }} ({{ employee.countryCode }})</option>
         }
       </select>
-      @if (showError('collaboratorId')) {
+      @if (showError('employeeId')) {
         <span class="field-error">Campo obligatorio</span>
       }
-      @for (message of serverErrorsOf('collaboratorId'); track message) {
+      @for (message of serverErrorsOf('employeeId'); track message) {
         <span class="field-error">{{ message }}</span>
       }
     </label>

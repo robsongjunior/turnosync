@@ -13,16 +13,16 @@ public sealed class ShiftExportService(IShiftRepository shifts, IShiftSpreadshee
     /// importación. No filtra por festivo: generar el archivo no depende de la API externa.
     /// </summary>
     public async Task<Result<ExportedFile>> ExportAsync(
-        DateOnly? from, DateOnly? to, int? collaboratorId = null, CancellationToken ct = default)
+        DateOnly? from, DateOnly? to, int? employeeId = null, CancellationToken ct = default)
     {
         if (ShiftPeriod.Validate(from, to, required: true) is { } invalid)
         {
             return invalid;
         }
 
-        var period = await shifts.ListWithCollaboratorAsync(collaboratorId, from, to, ct);
+        var period = await shifts.ListWithEmployeeAsync(employeeId, from, to, ct);
         var content = spreadsheet.Write(
-            period.Select(s => new ShiftExportRow(s.Collaborator!.Email, s.Date, s.StartTime, s.EndTime)));
+            period.Select(s => new ShiftExportRow(s.Employee!.Email, s.Date, s.StartTime, s.EndTime)));
 
         var fileName = FormattableString.Invariant($"turnos_{from:yyyy-MM-dd}_{to:yyyy-MM-dd}.xlsx");
 

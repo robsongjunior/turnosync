@@ -6,8 +6,8 @@ public sealed class ShiftTests
 {
     private static readonly DateOnly Day = new(2026, 10, 12);
 
-    private static Shift ShiftOf(string start, string end, int collaboratorId = 1, DateOnly? date = null) =>
-        Shift.Create(collaboratorId, date ?? Day, TimeOnly.Parse(start), TimeOnly.Parse(end));
+    private static Shift ShiftOf(string start, string end, int employeeId = 1, DateOnly? date = null) =>
+        Shift.Create(employeeId, date ?? Day, TimeOnly.Parse(start), TimeOnly.Parse(end));
 
     [Fact]
     public void Create_ShouldEndOnSameDay_WhenEndIsAfterStart()
@@ -46,7 +46,7 @@ public sealed class ShiftTests
 
         shift.Update(2, new DateOnly(2026, 10, 20), new TimeOnly(22, 0), new TimeOnly(6, 0));
 
-        Assert.Equal(2, shift.CollaboratorId);
+        Assert.Equal(2, shift.EmployeeId);
         Assert.Equal(new DateTime(2026, 10, 20, 22, 0, 0), shift.StartsAt);
         Assert.Equal(new DateTime(2026, 10, 21, 6, 0, 0), shift.EndsAt);
     }
@@ -81,10 +81,10 @@ public sealed class ShiftTests
     }
 
     [Fact]
-    public void Overlaps_ShouldBeFalse_WhenSameTimeButDifferentCollaborators()
+    public void Overlaps_ShouldBeFalse_WhenSameTimeButDifferentEmployees()
     {
-        var first = ShiftOf("08:00", "16:00", collaboratorId: 1);
-        var second = ShiftOf("08:00", "16:00", collaboratorId: 2);
+        var first = ShiftOf("08:00", "16:00", employeeId: 1);
+        var second = ShiftOf("08:00", "16:00", employeeId: 2);
 
         Assert.False(first.Overlaps(second));
     }

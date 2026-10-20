@@ -1,29 +1,29 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CollaboratorForm } from '../collaborators/collaborator-form';
-import { CollaboratorsApi } from '../core/collaborators-api';
+import { EmployeeForm } from '../employees/employee-form';
+import { EmployeesApi } from '../core/employees-api';
 import { describeError } from '../core/errors';
-import { Collaborator, ImportReport, Shift, ShiftFilter } from '../core/models';
+import { Employee, ImportReport, Shift, ShiftFilter } from '../core/models';
 import { ShiftsApi } from '../core/shifts-api';
 import { ImportReportPanel } from './import-report';
 import { ShiftForm } from './shift-form';
 
 @Component({
   selector: 'app-shifts-page',
-  imports: [ShiftForm, CollaboratorForm, ImportReportPanel],
+  imports: [ShiftForm, EmployeeForm, ImportReportPanel],
   templateUrl: './shifts-page.html',
 })
 export class ShiftsPage implements OnInit {
   private readonly shiftsApi = inject(ShiftsApi);
-  private readonly collaboratorsApi = inject(CollaboratorsApi);
+  private readonly employeesApi = inject(EmployeesApi);
 
   protected readonly shifts = signal<Shift[]>([]);
   protected readonly holidaysAvailable = signal(true);
-  protected readonly collaborators = signal<Collaborator[]>([]);
+  protected readonly employees = signal<Employee[]>([]);
 
   protected readonly formOpen = signal(false);
   /** El turno que se está editando; null = el formulario (si está abierto) crea uno nuevo. */
   protected readonly editing = signal<Shift | null>(null);
-  protected readonly collaboratorFormOpen = signal(false);
+  protected readonly employeeFormOpen = signal(false);
   protected readonly importReport = signal<ImportReport | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -31,10 +31,10 @@ export class ShiftsPage implements OnInit {
   protected readonly busy = signal(false);
 
   /** Filtros del listado. Desde/Hasta y el colaborador también delimitan la exportación. */
-  protected readonly filter = signal<ShiftFilter>({ collaboratorId: null, from: '', to: '', holiday: null });
+  protected readonly filter = signal<ShiftFilter>({ employeeId: null, from: '', to: '', holiday: null });
   protected readonly filtered = computed(() => {
     const f = this.filter();
-    return f.collaboratorId !== null || f.from !== '' || f.to !== '' || f.holiday !== null;
+    return f.employeeId !== null || f.from !== '' || f.to !== '' || f.holiday !== null;
   });
   protected readonly invalidPeriod = computed(() => {
     const { from, to } = this.filter();
@@ -53,7 +53,7 @@ export class ShiftsPage implements OnInit {
 
   protected async load(): Promise<void> {
     try {
-      this.collaborators.set(await this.collaboratorsApi.list());
+      this.employees.set(await this.employeesApi.list());
     } catch (error) {
       this.error.set(describeError(error));
     }
@@ -84,9 +84,9 @@ export class ShiftsPage implements OnInit {
     }
   }
 
-  protected setCollaboratorFilter(event: Event): void {
+  protected setEmployeeFilter(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    this.applyFilter({ collaboratorId: value === '' ? null : Number(value) });
+    this.applyFilter({ employeeId: value === '' ? null : Number(value) });
   }
 
   protected setFrom(event: Event): void {
@@ -103,7 +103,7 @@ export class ShiftsPage implements OnInit {
   }
 
   protected clearFilters(): void {
-    this.filter.set({ collaboratorId: null, from: '', to: '', holiday: null });
+    this.filter.set({ employeeId: null, from: '', to: '', holiday: null });
     void this.loadShifts();
   }
 
@@ -133,8 +133,8 @@ export class ShiftsPage implements OnInit {
     await this.load();
   }
 
-  protected async onCollaboratorSaved(): Promise<void> {
-    this.collaboratorFormOpen.set(false);
+  protected async onEmployeeSaved(): Promise<void> {
+    this.employeeFormOpen.set(false);
     this.error.set(null);
     await this.load(); // el nuevo colaborador aparece ya en el selector del formulario de turnos
   }
@@ -165,11 +165,11 @@ export class ShiftsPage implements OnInit {
       return;
     }
 
-    const { from, to, collaboratorId } = this.filter();
+    const { from, to, employeeId } = this.filter();
     this.busy.set(true);
     this.error.set(null);
     try {
-      const { blob, fileName } = await this.shiftsApi.export(from, to, collaboratorId);
+      const { blob, fileName } = await this.shiftsApi.export(from, to, employeeId);
       this.download(blob, fileName);
     } catch (error) {
       this.error.set(describeError(error));

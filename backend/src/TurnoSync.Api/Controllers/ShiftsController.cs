@@ -19,7 +19,7 @@ public sealed class ShiftsController(
     /// <c>isHoliday</c> es null en los turnos del país afectado y <c>holidaysAvailable</c> es false; el listado nunca falla.
     /// Los filtros son opcionales y se combinan entre sí.
     /// </summary>
-    /// <param name="collaboratorId">Solo los turnos de este colaborador.</param>
+    /// <param name="employeeId">Solo los turnos de este colaborador.</param>
     /// <param name="from">Primera fecha de inicio (inclusive, yyyy-MM-dd).</param>
     /// <param name="to">Última fecha de inicio (inclusive, yyyy-MM-dd).</param>
     /// <param name="holiday">
@@ -30,8 +30,8 @@ public sealed class ShiftsController(
     [ProducesResponseType<ShiftListResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> List(
-        int? collaboratorId, DateOnly? from, DateOnly? to, bool? holiday, CancellationToken ct) =>
-        HandleResult(await service.ListAsync(new ShiftListFilter(collaboratorId, from, to, holiday), ct));
+        int? employeeId, DateOnly? from, DateOnly? to, bool? holiday, CancellationToken ct) =>
+        HandleResult(await service.ListAsync(new ShiftListFilter(employeeId, from, to, holiday), ct));
 
     /// <summary>Obtiene un turno.</summary>
     [HttpGet(RouteConsts.ById)]
@@ -95,13 +95,13 @@ public sealed class ShiftsController(
     /// </summary>
     /// <param name="from">Primera fecha (inclusive).</param>
     /// <param name="to">Última fecha (inclusive).</param>
-    /// <param name="collaboratorId">Solo los turnos de este colaborador (opcional).</param>
+    /// <param name="employeeId">Solo los turnos de este colaborador (opcional).</param>
     [HttpGet(RouteConsts.Export)]
     [Produces(XlsxContentType)]
     [ProducesResponseType<FileContentResult>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Export(DateOnly? from, DateOnly? to, int? collaboratorId, CancellationToken ct) =>
+    public async Task<IActionResult> Export(DateOnly? from, DateOnly? to, int? employeeId, CancellationToken ct) =>
         HandleResult(
-            await exportService.ExportAsync(from, to, collaboratorId, ct),
+            await exportService.ExportAsync(from, to, employeeId, ct),
             file => File(file.Content, XlsxContentType, file.FileName));
 }

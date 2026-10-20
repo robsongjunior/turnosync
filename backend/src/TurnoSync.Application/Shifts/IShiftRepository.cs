@@ -9,16 +9,16 @@ public interface IShiftRepository : IRepository<Shift>
     /// Los turnos con su colaborador, en orden fijo: inicio del turno y luego nombre del colaborador.
     /// Cada filtro es opcional; from y to se aplican sobre Date (la fecha de inicio) y son inclusivos.
     /// </summary>
-    Task<IReadOnlyList<Shift>> ListWithCollaboratorAsync(
-        int? collaboratorId = null, DateOnly? from = null, DateOnly? to = null, CancellationToken ct = default);
+    Task<IReadOnlyList<Shift>> ListWithEmployeeAsync(
+        int? employeeId = null, DateOnly? from = null, DateOnly? to = null, CancellationToken ct = default);
 
     /// <summary>
     /// Los turnos del colaborador con Date entre from y to (inclusive), para comprobar solapamientos.
     /// excludeId omite el propio turno al actualizar.
     /// </summary>
     Task<IReadOnlyList<Shift>> ListForOverlapAsync(
-        int collaboratorId, DateOnly from, DateOnly to, int? excludeId, CancellationToken ct = default);
+        int employeeId, DateOnly from, DateOnly to, int? excludeId, CancellationToken ct = default);
 
     /// <summary>Los turnos del colaborador con seguimiento (para el borrado lógico en cascada).</summary>
-    Task<IReadOnlyList<Shift>> ListByCollaboratorAsync(int collaboratorId, CancellationToken ct = default);
+    Task<IReadOnlyList<Shift>> ListByEmployeeAsync(int employeeId, CancellationToken ct = default);
 }

@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TurnoSync.Domain.Collaborators;
+using TurnoSync.Domain.Employees;
 
 namespace TurnoSync.Infra.Persistence.Configurations;
 
-internal sealed class CollaboratorConfiguration : IEntityTypeConfiguration<Collaborator>
+internal sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
-    public void Configure(EntityTypeBuilder<Collaborator> builder)
+    public void Configure(EntityTypeBuilder<Employee> builder)
     {
         builder.ToTable("employees");
         builder.HasKey(c => c.Id);

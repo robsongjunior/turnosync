@@ -1,11 +1,11 @@
 using System.Globalization;
 using FluentValidation;
 
-namespace TurnoSync.Application.Collaborators;
+namespace TurnoSync.Application.Employees;
 
-public sealed class CollaboratorRequestValidator : AbstractValidator<CollaboratorRequest>
+public sealed class EmployeeRequestValidator : AbstractValidator<EmployeeRequest>
 {
-    public CollaboratorRequestValidator()
+    public EmployeeRequestValidator()
     {
         RuleLevelCascadeMode = CascadeMode.Stop;
 

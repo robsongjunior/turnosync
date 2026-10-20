@@ -20,10 +20,10 @@ public sealed class ShiftHolidaysApiTests : IDisposable
         _factory.Dispose();
     }
 
-    private async Task CreateShiftAsync(int collaboratorId, string date, string start = "08:00", string end = "16:00")
+    private async Task CreateShiftAsync(int employeeId, string date, string start = "08:00", string end = "16:00")
     {
         var response = await _client.PostAsJsonAsync(
-            "/api/shifts", new { collaboratorId, date, startTime = start, endTime = end });
+            "/api/shifts", new { employeeId, date, startTime = start, endTime = end });
         response.EnsureSuccessStatusCode();
     }
 
@@ -42,7 +42,7 @@ public sealed class ShiftHolidaysApiTests : IDisposable
         Assert.True(list.HolidaysAvailable);
         Assert.Equal(
             [("Ana Torres", (bool?)true), ("João Lima", (bool?)false)],
-            list.Items.Select(i => (i.CollaboratorName, i.IsHoliday)));
+            list.Items.Select(i => (i.EmployeeName, i.IsHoliday)));
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed class ShiftHolidaysApiTests : IDisposable
         Assert.False(list.HolidaysAvailable);
         Assert.Equal(
             [("Ana Torres", (bool?)true), ("João Lima", (bool?)null)],
-            list.Items.Select(i => (i.CollaboratorName, i.IsHoliday)));
+            list.Items.Select(i => (i.EmployeeName, i.IsHoliday)));
     }
 
     [Fact]

@@ -31,10 +31,10 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         return new MultipartFormDataContent { { fileContent, field, fileName } };
     }
 
-    private async Task CreateShiftAsync(int collaboratorId, string date, string start = "08:00", string end = "16:00")
+    private async Task CreateShiftAsync(int employeeId, string date, string start = "08:00", string end = "16:00")
     {
         var response = await _client.PostAsJsonAsync(
-            "/api/shifts", new { collaboratorId, date, startTime = start, endTime = end });
+            "/api/shifts", new { employeeId, date, startTime = start, endTime = end });
         response.EnsureSuccessStatusCode();
     }
 
@@ -143,7 +143,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         await CreateShiftAsync(1, "2026-10-15");
         await CreateShiftAsync(3, "2026-10-13");
         var deleted = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
-        await _client.DeleteAsync($"/api/shifts/{deleted!.Items.Single(i => i.CollaboratorId == 3).Id}");
+        await _client.DeleteAsync($"/api/shifts/{deleted!.Items.Single(i => i.EmployeeId == 3).Id}");
 
         var response = await _client.GetAsync("/api/shifts/export?from=2026-10-12&to=2026-10-14");
 
@@ -245,7 +245,7 @@ public sealed class ShiftSpreadsheetApiTests : IDisposable
         var original = await _client.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
         var copy = await otherClient.GetFromJsonAsync<ShiftListResponse>("/api/shifts", TestJson.Options);
         Assert.Equal(
-            original!.Items.Select(i => (i.CollaboratorId, i.Date, i.StartTime, i.EndTime)),
-            copy!.Items.Select(i => (i.CollaboratorId, i.Date, i.StartTime, i.EndTime)));
+            original!.Items.Select(i => (i.EmployeeId, i.Date, i.StartTime, i.EndTime)),
+            copy!.Items.Select(i => (i.EmployeeId, i.Date, i.StartTime, i.EndTime)));
     }
 }

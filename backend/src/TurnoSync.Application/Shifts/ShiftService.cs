@@ -1,6 +1,6 @@
 using System.Globalization;
 using FluentValidation;
-using TurnoSync.Application.Collaborators;
+using TurnoSync.Application.Employees;
 using TurnoSync.Application.Common;
 using TurnoSync.Application.Holidays;
 using TurnoSync.Domain.Shifts;
@@ -9,7 +9,7 @@ namespace TurnoSync.Application.Shifts;
 
 public sealed class ShiftService(
     IShiftRepository shifts,
-    ICollaboratorRepository collaborators,
+    IEmployeeRepository employees,
     IHolidayProvider holidays,
     IValidator<ShiftRequest> validator)
 {
@@ -26,20 +26,20 @@ public sealed class ShiftService(
             return invalid;
         }
 
-        var list = await shifts.ListWithCollaboratorAsync(filter.CollaboratorId, filter.From, filter.To, ct);
+        var list = await shifts.ListWithEmployeeAsync(filter.EmployeeId, filter.From, filter.To, ct);
 
-        var keys = list.Select(s => (s.Collaborator!.CountryCode, s.Date.Year)).Distinct().ToList();
+        var keys = list.Select(s => (s.Employee!.CountryCode, s.Date.Year)).Distinct().ToList();
         var lookups = await Task.WhenAll(keys.Select(async key =>
             (Key: key, Holidays: await holidays.GetNationalHolidaysAsync(key.CountryCode, key.Year, ct))));
         var holidaysByKey = lookups.ToDictionary(l => l.Key, l => l.Holidays);
 
         var items = list.Select(s =>
         {
-            var countryHolidays = holidaysByKey[(s.Collaborator!.CountryCode, s.Date.Year)];
+            var countryHolidays = holidaysByKey[(s.Employee!.CountryCode, s.Date.Year)];
             bool? isHoliday = countryHolidays?.Contains(s.Date);
 
             return new ShiftListItem(
-                s.Id, s.CollaboratorId, s.Collaborator.Name, s.Date, s.StartTime, s.EndTime, isHoliday);
+                s.Id, s.EmployeeId, s.Employee.Name, s.Date, s.StartTime, s.EndTime, isHoliday);
         })
         .Where(i => filter.Holiday is null || i.IsHoliday == filter.Holiday)
         .ToList();
@@ -55,9 +55,9 @@ public sealed class ShiftService(
             return NotFound(id);
         }
 
-        var collaborator = await collaborators.GetByIdAsync(shift.CollaboratorId, ct);
+        var employee = await employees.GetByIdAsync(shift.EmployeeId, ct);
 
-        return ToResponse(shift, collaborator!.Name);
+        return ToResponse(shift, employee!.Name);
     }
 
     public async Task<Result<ShiftResponse>> CreateAsync(ShiftRequest request, CancellationToken ct = default)
@@ -68,23 +68,23 @@ public sealed class ShiftService(
             return validation.ToResultError();
         }
 
-        var collaborator = await collaborators.GetByIdAsync(request.CollaboratorId!.Value, ct);
-        if (collaborator is null)
+        var employee = await employees.GetByIdAsync(request.EmployeeId!.Value, ct);
+        if (employee is null)
         {
-            return CollaboratorNotFound(request.CollaboratorId.Value);
+            return EmployeeNotFound(request.EmployeeId.Value);
         }
 
-        var shift = Shift.Create(collaborator.Id, request.Date!.Value, request.StartTime!.Value, request.EndTime!.Value);
+        var shift = Shift.Create(employee.Id, request.Date!.Value, request.StartTime!.Value, request.EndTime!.Value);
 
         if (await FindOverlapAsync(shift, excludeId: null, ct) is { } existing)
         {
-            return OverlapConflict(collaborator.Name, existing);
+            return OverlapConflict(employee.Name, existing);
         }
 
         shifts.Add(shift);
         await shifts.SaveChangesAsync(ct);
 
-        return ToResponse(shift, collaborator.Name);
+        return ToResponse(shift, employee.Name);
     }
 
     public async Task<Result<ShiftResponse>> UpdateAsync(int id, ShiftRequest request, CancellationToken ct = default)
@@ -101,24 +101,24 @@ public sealed class ShiftService(
             return NotFound(id);
         }
 
-        var collaborator = await collaborators.GetByIdAsync(request.CollaboratorId!.Value, ct);
-        if (collaborator is null)
+        var employee = await employees.GetByIdAsync(request.EmployeeId!.Value, ct);
+        if (employee is null)
         {
-            return CollaboratorNotFound(request.CollaboratorId.Value);
+            return EmployeeNotFound(request.EmployeeId.Value);
         }
 
         // La comprobación usa un candidato para no modificar la entidad con seguimiento antes de saber si hay conflicto.
-        var candidate = Shift.Create(collaborator.Id, request.Date!.Value, request.StartTime!.Value, request.EndTime!.Value);
+        var candidate = Shift.Create(employee.Id, request.Date!.Value, request.StartTime!.Value, request.EndTime!.Value);
 
         if (await FindOverlapAsync(candidate, excludeId: id, ct) is { } existing)
         {
-            return OverlapConflict(collaborator.Name, existing);
+            return OverlapConflict(employee.Name, existing);
         }
 
-        shift.Update(collaborator.Id, candidate.Date, candidate.StartTime, candidate.EndTime);
+        shift.Update(employee.Id, candidate.Date, candidate.StartTime, candidate.EndTime);
         await shifts.SaveChangesAsync(ct);
 
-        return ToResponse(shift, collaborator.Name);
+        return ToResponse(shift, employee.Name);
     }
 
     public async Task<Result> DeleteAsync(int id, CancellationToken ct = default)
@@ -142,22 +142,22 @@ public sealed class ShiftService(
     private async Task<Shift?> FindOverlapAsync(Shift candidate, int? excludeId, CancellationToken ct)
     {
         var nearby = await shifts.ListForOverlapAsync(
-            candidate.CollaboratorId, candidate.Date.AddDays(-1), candidate.Date.AddDays(1), excludeId, ct);
+            candidate.EmployeeId, candidate.Date.AddDays(-1), candidate.Date.AddDays(1), excludeId, ct);
 
         return nearby.FirstOrDefault(candidate.Overlaps);
     }
 
-    private static ResultError OverlapConflict(string collaboratorName, Shift existing) =>
-        ResultError.Conflict($"El turno se solapa con un turno existente de {collaboratorName} ({Describe(existing)}).");
+    private static ResultError OverlapConflict(string employeeName, Shift existing) =>
+        ResultError.Conflict($"El turno se solapa con un turno existente de {employeeName} ({Describe(existing)}).");
 
     private static ResultError NotFound(int id) => ResultError.NotFound($"No se encontró el turno {id}.");
 
-    private static ResultError CollaboratorNotFound(int id) =>
+    private static ResultError EmployeeNotFound(int id) =>
         ResultError.NotFound($"No se encontró el colaborador {id}.");
 
     private static string Describe(Shift shift) =>
         FormattableString.Invariant($"{shift.Date:yyyy-MM-dd} {shift.StartTime:HH:mm}-{shift.EndTime:HH:mm}");
 
-    private static ShiftResponse ToResponse(Shift s, string collaboratorName) =>
-        new(s.Id, s.CollaboratorId, collaboratorName, s.Date, s.StartTime, s.EndTime);
+    private static ShiftResponse ToResponse(Shift s, string employeeName) =>
+        new(s.Id, s.EmployeeId, employeeName, s.Date, s.StartTime, s.EndTime);
 }

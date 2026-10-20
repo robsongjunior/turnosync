@@ -23,10 +23,10 @@ public sealed class ShiftFiltersApiTests : IDisposable
         _factory.Dispose();
     }
 
-    private async Task CreateShiftAsync(int collaboratorId, string date, string start = "08:00", string end = "16:00")
+    private async Task CreateShiftAsync(int employeeId, string date, string start = "08:00", string end = "16:00")
     {
         var response = await _client.PostAsJsonAsync(
-            "/api/shifts", new { collaboratorId, date, startTime = start, endTime = end });
+            "/api/shifts", new { employeeId, date, startTime = start, endTime = end });
         response.EnsureSuccessStatusCode();
     }
 
@@ -34,7 +34,7 @@ public sealed class ShiftFiltersApiTests : IDisposable
         (await _client.GetFromJsonAsync<ShiftListResponse>($"/api/shifts{query}", TestJson.Options))!;
 
     private static IEnumerable<(int, string)> Keys(ShiftListResponse list) =>
-        list.Items.Select(i => (i.CollaboratorId, i.Date.ToString("yyyy-MM-dd")));
+        list.Items.Select(i => (i.EmployeeId, i.Date.ToString("yyyy-MM-dd")));
 
     [Fact]
     public async Task List_ShouldReturnEverything_WhenThereAreNoFilters()
@@ -48,23 +48,23 @@ public sealed class ShiftFiltersApiTests : IDisposable
     }
 
     [Fact]
-    public async Task List_ShouldFilterByCollaborator()
+    public async Task List_ShouldFilterByEmployee()
     {
         await CreateShiftAsync(Ana, "2026-10-12");
         await CreateShiftAsync(Joao, "2026-10-12");
         await CreateShiftAsync(Ana, "2026-10-13");
 
-        var list = await ListAsync($"?collaboratorId={Ana}");
+        var list = await ListAsync($"?employeeId={Ana}");
 
         Assert.Equal([(Ana, "2026-10-12"), (Ana, "2026-10-13")], Keys(list));
     }
 
     [Fact]
-    public async Task List_ShouldReturnAnEmptyList_WhenTheCollaboratorDoesNotExist()
+    public async Task List_ShouldReturnAnEmptyList_WhenTheEmployeeDoesNotExist()
     {
         await CreateShiftAsync(Ana, "2026-10-12");
 
-        var list = await ListAsync("?collaboratorId=999");
+        var list = await ListAsync("?employeeId=999");
 
         Assert.Empty(list.Items);
     }
@@ -109,7 +109,7 @@ public sealed class ShiftFiltersApiTests : IDisposable
     [Theory]
     [InlineData("?from=ayer")]
     [InlineData("?holiday=quizas")]
-    [InlineData("?collaboratorId=ana")]
+    [InlineData("?employeeId=ana")]
     public async Task List_ShouldReturn400_WhenAFilterIsMalformed(string query)
     {
         var response = await _client.GetAsync($"/api/shifts{query}");
@@ -120,7 +120,7 @@ public sealed class ShiftFiltersApiTests : IDisposable
     [Theory]
     [InlineData(true, Ana)]
     [InlineData(false, Joao)]
-    public async Task List_ShouldFilterByHoliday(bool holiday, int expectedCollaborator)
+    public async Task List_ShouldFilterByHoliday(bool holiday, int expectedEmployee)
     {
         _factory.Holidays.SetHolidays("ES", 2026, new DateOnly(2026, 10, 12));
         await CreateShiftAsync(Ana, "2026-10-12");
@@ -128,7 +128,7 @@ public sealed class ShiftFiltersApiTests : IDisposable
 
         var list = await ListAsync($"?holiday={holiday}");
 
-        Assert.Equal([(expectedCollaborator, "2026-10-12")], Keys(list));
+        Assert.Equal([(expectedEmployee, "2026-10-12")], Keys(list));
         Assert.True(list.HolidaysAvailable);
     }
 
@@ -145,7 +145,7 @@ public sealed class ShiftFiltersApiTests : IDisposable
 
         var list = await ListAsync($"?holiday={holiday}");
 
-        Assert.DoesNotContain(list.Items, i => i.CollaboratorId == Joao);
+        Assert.DoesNotContain(list.Items, i => i.EmployeeId == Joao);
         Assert.Single(list.Items);
         Assert.False(list.HolidaysAvailable);
     }
@@ -160,7 +160,7 @@ public sealed class ShiftFiltersApiTests : IDisposable
         await CreateShiftAsync(Ana, "2026-11-01");  // fuera del período
         await CreateShiftAsync(Joao, "2026-10-12"); // otro colaborador
 
-        var list = await ListAsync($"?collaboratorId={Ana}&from=2026-10-01&to=2026-10-31&holiday=true");
+        var list = await ListAsync($"?employeeId={Ana}&from=2026-10-01&to=2026-10-31&holiday=true");
 
         Assert.Equal([(Ana, "2026-10-12")], Keys(list));
     }
@@ -171,18 +171,18 @@ public sealed class ShiftFiltersApiTests : IDisposable
         await CreateShiftAsync(Ana, "2026-10-12");
         await CreateShiftAsync(Joao, "2027-01-04");
 
-        await ListAsync($"?collaboratorId={Ana}");
+        await ListAsync($"?employeeId={Ana}");
 
         Assert.Equal([("ES", 2026)], _factory.Holidays.Calls);
     }
 
     [Fact]
-    public async Task Export_ShouldFilterByCollaborator_WhenGiven()
+    public async Task Export_ShouldFilterByEmployee_WhenGiven()
     {
         await CreateShiftAsync(Ana, "2026-10-12");
         await CreateShiftAsync(Joao, "2026-10-12");
 
-        var file = await _client.GetByteArrayAsync($"/api/shifts/export?from=2026-10-01&to=2026-10-31&collaboratorId={Joao}");
+        var file = await _client.GetByteArrayAsync($"/api/shifts/export?from=2026-10-01&to=2026-10-31&employeeId={Joao}");
 
         using var workbook = new XLWorkbook(SheetBuilder.AsStream(file));
         Assert.Equal(

@@ -24,7 +24,7 @@ public sealed class ShiftImportServiceTests : IDisposable
         await using var context = _database.CreateContext();
         var service = new ShiftImportService(
             new ClosedXmlShiftSpreadsheet(),
-            new CollaboratorRepository(context),
+            new EmployeeRepository(context),
             new ShiftRepository(context),
             new ShiftRequestValidator());
 
@@ -39,10 +39,10 @@ public sealed class ShiftImportServiceTests : IDisposable
         return result.Value!;
     }
 
-    private async Task SeedShiftAsync(int collaboratorId, DateOnly date, string start, string end, bool deleted = false)
+    private async Task SeedShiftAsync(int employeeId, DateOnly date, string start, string end, bool deleted = false)
     {
         await using var context = _database.CreateContext();
-        var shift = Shift.Create(collaboratorId, date, TimeOnly.Parse(start), TimeOnly.Parse(end));
+        var shift = Shift.Create(employeeId, date, TimeOnly.Parse(start), TimeOnly.Parse(end));
         if (deleted)
         {
             shift.Delete();
@@ -52,11 +52,11 @@ public sealed class ShiftImportServiceTests : IDisposable
         await context.SaveChangesAsync();
     }
 
-    private async Task<List<(int CollaboratorId, DateOnly Date, TimeOnly Start, TimeOnly End)>> StoredShiftsAsync()
+    private async Task<List<(int EmployeeId, DateOnly Date, TimeOnly Start, TimeOnly End)>> StoredShiftsAsync()
     {
         await using var context = _database.CreateContext();
-        var shifts = await context.Shifts.OrderBy(s => s.StartsAt).ThenBy(s => s.CollaboratorId).ToListAsync();
-        return shifts.Select(s => (s.CollaboratorId, s.Date, s.StartTime, s.EndTime)).ToList();
+        var shifts = await context.Shifts.OrderBy(s => s.StartsAt).ThenBy(s => s.EmployeeId).ToListAsync();
+        return shifts.Select(s => (s.EmployeeId, s.Date, s.StartTime, s.EndTime)).ToList();
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class ShiftImportServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Import_ShouldMatchCollaboratorsByEmailIgnoringCaseAndSpaces()
+    public async Task Import_ShouldMatchEmployeesByEmailIgnoringCaseAndSpaces()
     {
         var report = await ImportOkAsync(SheetBuilder.Standard(
             ["  ANA@TurnoSync.DEV ", "2026-10-13", "08:00", "16:00"]));

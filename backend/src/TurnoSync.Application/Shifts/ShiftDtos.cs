@@ -1,13 +1,13 @@
 namespace TurnoSync.Application.Shifts;
 
-// Anulables por la misma razón que CollaboratorRequest. En valores como TimeOnly, además,
+// Anulables por la misma razón que EmployeeRequest. En valores como TimeOnly, además,
 // permite distinguir "ausente" de 00:00, que es una hora válida.
-public sealed record ShiftRequest(int? CollaboratorId, DateOnly? Date, TimeOnly? StartTime, TimeOnly? EndTime);
+public sealed record ShiftRequest(int? EmployeeId, DateOnly? Date, TimeOnly? StartTime, TimeOnly? EndTime);
 
 public sealed record ShiftResponse(
     int Id,
-    int CollaboratorId,
-    string CollaboratorName,
+    int EmployeeId,
+    string EmployeeName,
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime);
@@ -18,15 +18,15 @@ public sealed record ShiftResponse(
 /// </summary>
 public sealed record ShiftListItem(
     int Id,
-    int CollaboratorId,
-    string CollaboratorName,
+    int EmployeeId,
+    string EmployeeName,
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime,
     bool? IsHoliday);
 
 /// <summary>Filtros del listado. Todos son opcionales y se combinan con "y".</summary>
-/// <param name="CollaboratorId">Solo los turnos de este colaborador.</param>
+/// <param name="EmployeeId">Solo los turnos de este colaborador.</param>
 /// <param name="From">Primera fecha de inicio (inclusive).</param>
 /// <param name="To">Última fecha de inicio (inclusive).</param>
 /// <param name="Holiday">
@@ -34,7 +34,7 @@ public sealed record ShiftListItem(
 /// (la API de festivos falló) no cumplen ninguno de los dos.
 /// </param>
 public sealed record ShiftListFilter(
-    int? CollaboratorId = null, DateOnly? From = null, DateOnly? To = null, bool? Holiday = null);
+    int? EmployeeId = null, DateOnly? From = null, DateOnly? To = null, bool? Holiday = null);
 
 /// <param name="Items">Turnos en orden fijo: inicio del turno y luego nombre del colaborador.</param>
 /// <param name="HolidaysAvailable">False si la consulta de festivos falló para algún país.</param>

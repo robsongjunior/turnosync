@@ -9,7 +9,7 @@ public sealed class ShiftRequestValidator : AbstractValidator<ShiftRequest>
     {
         RuleLevelCascadeMode = CascadeMode.Stop;
 
-        RuleFor(x => x.CollaboratorId)
+        RuleFor(x => x.EmployeeId)
             .NotNull().WithMessage("El colaborador es obligatorio.")
             .GreaterThan(0).WithMessage("El identificador del colaborador debe ser mayor que 0.");
         RuleFor(x => x.Date).NotNull().WithMessage("La fecha es obligatoria.");

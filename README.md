@@ -55,7 +55,7 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 | 2 | CRUD de turnos (colaborador, fecha, inicio, fin) | 5 endpoints; solo esos 4 campos. El listado se filtra por colaborador, período y festivo |
 | 3 | Sin solapamientos para el mismo colaborador | `Shift.Overlaps` en el dominio, aplicado en POST, PUT e importación |
 | 4 | Importar `.xlsx` con informe fila a fila | Columnas `Email`, `Fecha`, `HoraInicio`, `HoraFin`; informe `imported` / `failed` con los motivos |
-| 5 | Exportar `.xlsx` filtrado por rango de fechas | `GET /api/shifts/export?from=&to=` (y `collaboratorId` opcional), mismas 4 columnas |
+| 5 | Exportar `.xlsx` filtrado por rango de fechas | `GET /api/shifts/export?from=&to=` (y `employeeId` opcional), mismas 4 columnas |
 | 6 | Festivos del país del colaborador (API externa) | Nager.Date; `isHoliday` en el listado; si la API falla, `isHoliday: null` y `holidaysAvailable: false` |
 | 7 | Base de datos relacional | SQLite en archivo vía EF Core (con migraciones), en un volumen de Docker |
 | 8 | `docker-compose up` | Un servicio `app` (API + Angular) |
@@ -67,18 +67,18 @@ dotnet test backend/TurnoSync.slnx   # exige el SDK de .NET 9
 
 | Método y ruta | Descripción | Respuestas |
 | --- | --- | --- |
-| `GET /api/collaborators` | Lista colaboradores | 200 |
-| `GET /api/collaborators/{id}` | Detalle | 200 · 404 |
-| `POST /api/collaborators` | Crea | 201 · 400 · 409 (email duplicado) |
-| `PUT /api/collaborators/{id}` | Actualiza | 200 · 400 · 404 · 409 |
-| `DELETE /api/collaborators/{id}` | Borrado lógico del colaborador **y de sus turnos** | 204 · 404 |
-| `GET /api/shifts?collaboratorId=&from=&to=&holiday=` | Lista los turnos con `isHoliday`; filtros opcionales (ver abajo) | 200 · 400 (`from > to`) |
+| `GET /api/employees` | Lista colaboradores | 200 |
+| `GET /api/employees/{id}` | Detalle | 200 · 404 |
+| `POST /api/employees` | Crea | 201 · 400 · 409 (email duplicado) |
+| `PUT /api/employees/{id}` | Actualiza | 200 · 400 · 404 · 409 |
+| `DELETE /api/employees/{id}` | Borrado lógico del colaborador **y de sus turnos** | 204 · 404 |
+| `GET /api/shifts?employeeId=&from=&to=&holiday=` | Lista los turnos con `isHoliday`; filtros opcionales (ver abajo) | 200 · 400 (`from > to`) |
 | `GET /api/shifts/{id}` | Detalle | 200 · 404 |
 | `POST /api/shifts` | Crea | 201 · 400 · 404 (colaborador) · 409 (solapamiento) |
 | `PUT /api/shifts/{id}` | Actualiza | 200 · 400 · 404 · 409 |
 | `DELETE /api/shifts/{id}` | Borrado lógico | 204 · 404 |
 | `POST /api/shifts/import` | Sube un `.xlsx` (multipart, campo `file`) y devuelve el informe | 200 · 400 |
-| `GET /api/shifts/export?from=&to=&collaboratorId=` | Descarga un `.xlsx` llamado `turnos_{from}_{to}.xlsx` (`from` y `to` obligatorios, `yyyy-MM-dd`; `collaboratorId` opcional) | 200 · 400 |
+| `GET /api/shifts/export?from=&to=&employeeId=` | Descarga un `.xlsx` llamado `turnos_{from}_{to}.xlsx` (`from` y `to` obligatorios, `yyyy-MM-dd`; `employeeId` opcional) | 200 · 400 |
 
 Los errores siguen el estándar `ProblemDetails` / `ValidationProblemDetails` de ASP.NET Core. Los mensajes están en español,
 también los que genera el propio framework (cuerpo vacío, JSON mal formado, valor no válido…).
@@ -88,7 +88,7 @@ Ejemplo de turno en el listado (`GET /api/shifts`):
 ```json
 {
   "items": [
-    { "id": 1, "collaboratorId": 1, "collaboratorName": "Ana Torres", "date": "2026-10-12",
+    { "id": 1, "employeeId": 1, "employeeName": "Ana Torres", "date": "2026-10-12",
       "startTime": "22:00", "endTime": "06:00", "isHoliday": true }
   ],
   "holidaysAvailable": true
@@ -97,11 +97,11 @@ Ejemplo de turno en el listado (`GET /api/shifts`):
 
 ### Filtros del listado
 
-Todos son opcionales y se combinan entre sí (`GET /api/shifts?collaboratorId=1&from=2026-10-01&to=2026-10-31&holiday=true`):
+Todos son opcionales y se combinan entre sí (`GET /api/shifts?employeeId=1&from=2026-10-01&to=2026-10-31&holiday=true`):
 
 | Parámetro | Efecto |
 | --- | --- |
-| `collaboratorId` | Solo los turnos de ese colaborador. Un id inexistente devuelve una lista vacía (es un filtro, no un recurso). |
+| `employeeId` | Solo los turnos de ese colaborador. Un id inexistente devuelve una lista vacía (es un filtro, no un recurso). |
 | `from`, `to` | Fecha de inicio del turno entre ambas, inclusivas (el mismo criterio que la exportación). Con una sola, el período queda abierto. `from > to` → 400. |
 | `holiday` | `true`: solo los turnos en festivo; `false`: solo los que no. Los turnos con festivo desconocido (Nager.Date caída) no cumplen ninguno de los dos, y `holidaysAvailable: false` avisa de que el resultado puede estar incompleto. |
 
@@ -214,7 +214,7 @@ transacciones) sin necesidad de un contenedor aparte.
 xUnit + NSubstitute + `WebApplicationFactory`. Se prioriza la calidad sobre la cantidad: la regla de negocio y los fallos de la API externa.
 
 - **Dominio:** `Shift` (cálculo de `StartsAt`/`EndsAt`, nocturnos, y todos los casos límite de `Overlaps`: parcial al inicio y al fin, contenido,
-  que contiene, idéntico, turnos que se tocan, mismo horario con distinto colaborador, nocturno contra turno del día siguiente) y `Collaborator`.
+  que contiene, idéntico, turnos que se tocan, mismo horario con distinto colaborador, nocturno contra turno del día siguiente) y `Employee`.
 - **Validators:** campos obligatorios, email, país ISO, inicio ≠ fin, medianoche como hora válida y el texto exacto de cada mensaje (en español).
 - **Importación:** archivo mixto con planilla generada en memoria sobre SQLite real (filas válidas e inválidas, solapamiento con la base de datos y
   dentro del propio archivo, email desconocido, celdas ilegibles, varios motivos por fila, turnos borrados que no bloquean, nocturnos).

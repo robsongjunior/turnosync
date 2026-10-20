@@ -17,7 +17,7 @@ namespace TurnoSync.Infra.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.21");
 
-            modelBuilder.Entity("TurnoSync.Domain.Collaborators.Collaborator", b =>
+            modelBuilder.Entity("TurnoSync.Domain.Employees.Employee", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,9 +106,9 @@ namespace TurnoSync.Infra.Persistence.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("CollaboratorId")
+                    b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER")
-                        .HasColumnName("collaborator_id");
+                        .HasColumnName("employee_id");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("TEXT")
@@ -137,22 +137,22 @@ namespace TurnoSync.Infra.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_shifts");
 
-                    b.HasIndex("CollaboratorId", "Date")
-                        .HasDatabaseName("ix_shifts_collaborator_id_date");
+                    b.HasIndex("EmployeeId", "Date")
+                        .HasDatabaseName("ix_shifts_employee_id_date");
 
                     b.ToTable("shifts", (string)null);
                 });
 
             modelBuilder.Entity("TurnoSync.Domain.Shifts.Shift", b =>
                 {
-                    b.HasOne("TurnoSync.Domain.Collaborators.Collaborator", "Collaborator")
+                    b.HasOne("TurnoSync.Domain.Employees.Employee", "Employee")
                         .WithMany()
-                        .HasForeignKey("CollaboratorId")
+                        .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_shifts_collaborators_collaborator_id");
+                        .HasConstraintName("fk_shifts_employees_employee_id");
 
-                    b.Navigation("Collaborator");
+                    b.Navigation("Employee");
                 });
 #pragma warning restore 612, 618
         }

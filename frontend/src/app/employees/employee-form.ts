@@ -1,16 +1,16 @@
 import { Component, inject, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CollaboratorsApi } from '../core/collaborators-api';
+import { EmployeesApi } from '../core/employees-api';
 import { describeError, fieldErrorsOf } from '../core/errors';
-import { CollaboratorRequest } from '../core/models';
+import { EmployeeRequest } from '../core/models';
 
 @Component({
-  selector: 'app-collaborator-form',
+  selector: 'app-employee-form',
   imports: [ReactiveFormsModule],
-  templateUrl: './collaborator-form.html',
+  templateUrl: './employee-form.html',
 })
-export class CollaboratorForm {
-  private readonly api = inject(CollaboratorsApi);
+export class EmployeeForm {
+  private readonly api = inject(EmployeesApi);
 
   readonly saved = output<void>();
   readonly cancelled = output<void>();
@@ -48,7 +48,7 @@ export class CollaboratorForm {
     this.formError.set(null);
 
     const { name, email, countryCode } = this.form.getRawValue();
-    const body: CollaboratorRequest = { name: name.trim(), email: email.trim(), countryCode: countryCode.toUpperCase() };
+    const body: EmployeeRequest = { name: name.trim(), email: email.trim(), countryCode: countryCode.toUpperCase() };
 
     try {
       await this.api.create(body);

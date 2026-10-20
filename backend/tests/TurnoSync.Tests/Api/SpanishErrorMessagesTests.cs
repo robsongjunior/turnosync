@@ -63,9 +63,9 @@ public sealed class SpanishErrorMessagesTests : IDisposable
     }
 
     [Theory]
-    [InlineData("/api/shifts", """{"collaboratorId":1,"date":"2026-13-45","startTime":"08:00","endTime":"16:00"}""", "date")]
-    [InlineData("/api/shifts", """{"collaboratorId":"abc","date":"2026-10-12","startTime":"08:00","endTime":"16:00"}""", "collaboratorId")]
-    [InlineData("/api/collaborators", """{"name":5,"email":"ana@turnosync.dev","countryCode":"ES"}""", "name")]
+    [InlineData("/api/shifts", """{"employeeId":1,"date":"2026-13-45","startTime":"08:00","endTime":"16:00"}""", "date")]
+    [InlineData("/api/shifts", """{"employeeId":"abc","date":"2026-10-12","startTime":"08:00","endTime":"16:00"}""", "employeeId")]
+    [InlineData("/api/employees", """{"name":5,"email":"ana@turnosync.dev","countryCode":"ES"}""", "name")]
     public async Task WrongJsonValue_ShouldNameTheFieldInSpanish_WithoutLeakingDotNetTypes(string url, string json, string field)
     {
         var problem = await PostJsonAsync(url, json);
@@ -79,7 +79,7 @@ public sealed class SpanishErrorMessagesTests : IDisposable
     public async Task InvalidTime_ShouldKeepTheMessageOfTheTimeConverter()
     {
         var problem = await PostJsonAsync(
-            "/api/shifts", """{"collaboratorId":1,"date":"2026-10-12","startTime":"25:00","endTime":"16:00"}""");
+            "/api/shifts", """{"employeeId":1,"date":"2026-10-12","startTime":"25:00","endTime":"16:00"}""");
 
         Assert.Equal(["La hora debe tener el formato HH:mm."], problem.Errors["$.startTime"]);
     }

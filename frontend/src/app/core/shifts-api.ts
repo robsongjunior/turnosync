@@ -31,11 +31,11 @@ export class ShiftsApi {
   }
 
   /** El filtro de festivos no se aplica a la exportación: generar el archivo no depende de la API externa. */
-  async export(from: string, to: string, collaboratorId: number | null): Promise<DownloadedFile> {
+  async export(from: string, to: string, employeeId: number | null): Promise<DownloadedFile> {
     try {
       const response = await firstValueFrom(
         this.http.get('/api/shifts/export', {
-          params: toParams({ from, to, collaboratorId, holiday: null }),
+          params: toParams({ from, to, employeeId, holiday: null }),
           observe: 'response',
           responseType: 'blob',
         }),
@@ -56,8 +56,8 @@ export class ShiftsApi {
 /** Solo envía los filtros con valor. */
 function toParams(filter: ShiftFilter): HttpParams {
   let params = new HttpParams();
-  if (filter.collaboratorId !== null) {
-    params = params.set('collaboratorId', filter.collaboratorId);
+  if (filter.employeeId !== null) {
+    params = params.set('employeeId', filter.employeeId);
   }
   if (filter.from) {
     params = params.set('from', filter.from);

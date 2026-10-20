@@ -1,4 +1,4 @@
-using TurnoSync.Domain.Collaborators;
+using TurnoSync.Domain.Employees;
 using TurnoSync.Domain.Common;
 
 namespace TurnoSync.Domain.Shifts;
@@ -10,9 +10,9 @@ public sealed class Shift : BaseEntity
     {
     }
 
-    public int CollaboratorId { get; private set; }
+    public int EmployeeId { get; private set; }
 
-    public Collaborator? Collaborator { get; private set; }
+    public Employee? Employee { get; private set; }
 
     public DateOnly Date { get; private set; }
 
@@ -29,14 +29,14 @@ public sealed class Shift : BaseEntity
     /// </summary>
     public DateTime EndsAt { get; private set; }
 
-    public static Shift Create(int collaboratorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+    public static Shift Create(int employeeId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
     {
         var shift = new Shift();
-        shift.Update(collaboratorId, date, startTime, endTime);
+        shift.Update(employeeId, date, startTime, endTime);
         return shift;
     }
 
-    public void Update(int collaboratorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+    public void Update(int employeeId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
     {
         // El validador lo rechaza antes (como error de negocio); aquí solo se protege la invariante.
         if (startTime == endTime)
@@ -44,7 +44,7 @@ public sealed class Shift : BaseEntity
             throw new ArgumentException("Un turno no puede empezar y terminar a la misma hora.", nameof(endTime));
         }
 
-        CollaboratorId = collaboratorId;
+        EmployeeId = employeeId;
         Date = date;
         StartTime = startTime;
         EndTime = endTime;
@@ -60,7 +60,7 @@ public sealed class Shift : BaseEntity
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        return CollaboratorId == other.CollaboratorId
+        return EmployeeId == other.EmployeeId
             && StartsAt < other.EndsAt
             && other.StartsAt < EndsAt;
     }

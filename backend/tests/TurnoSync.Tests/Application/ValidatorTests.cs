@@ -1,11 +1,11 @@
-using TurnoSync.Application.Collaborators;
+using TurnoSync.Application.Employees;
 using TurnoSync.Application.Shifts;
 
 namespace TurnoSync.Tests.Application;
 
 public sealed class ValidatorTests
 {
-    private readonly CollaboratorRequestValidator _collaboratorValidator = new();
+    private readonly EmployeeRequestValidator _employeeValidator = new();
     private readonly ShiftRequestValidator _shiftValidator = new();
 
     private static ShiftRequest ValidShift() => new(1, new DateOnly(2026, 10, 12), new TimeOnly(8, 0), new TimeOnly(16, 0));
@@ -14,9 +14,9 @@ public sealed class ValidatorTests
         result.Errors.Select(e => e.PropertyName).Distinct().Order().ToArray();
 
     [Fact]
-    public void CollaboratorValidator_ShouldPass_WhenRequestIsValid()
+    public void EmployeeValidator_ShouldPass_WhenRequestIsValid()
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana Torres", "ana@turnosync.dev", "ES"));
+        var result = _employeeValidator.Validate(new EmployeeRequest("Ana Torres", "ana@turnosync.dev", "ES"));
 
         Assert.True(result.IsValid);
     }
@@ -24,17 +24,17 @@ public sealed class ValidatorTests
     [Theory]
     [InlineData("br")]
     [InlineData("Pt")]
-    public void CollaboratorValidator_ShouldPass_WhenCountryCodeIsLowercaseOrMixed(string country)
+    public void EmployeeValidator_ShouldPass_WhenCountryCodeIsLowercaseOrMixed(string country)
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", "ana@turnosync.dev", country));
+        var result = _employeeValidator.Validate(new EmployeeRequest("Ana", "ana@turnosync.dev", country));
 
         Assert.True(result.IsValid);
     }
 
     [Fact]
-    public void CollaboratorValidator_ShouldFailEveryField_WhenRequestIsEmpty()
+    public void EmployeeValidator_ShouldFailEveryField_WhenRequestIsEmpty()
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest(null, null, null));
+        var result = _employeeValidator.Validate(new EmployeeRequest(null, null, null));
 
         Assert.Equal(["CountryCode", "Email", "Name"], FailedProperties(result));
     }
@@ -43,9 +43,9 @@ public sealed class ValidatorTests
     [InlineData("not-an-email")]
     [InlineData("a@")]
     [InlineData("@turnosync.dev")]
-    public void CollaboratorValidator_ShouldFail_WhenEmailIsInvalid(string email)
+    public void EmployeeValidator_ShouldFail_WhenEmailIsInvalid(string email)
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", email, "ES"));
+        var result = _employeeValidator.Validate(new EmployeeRequest("Ana", email, "ES"));
 
         Assert.Equal(["Email"], FailedProperties(result));
     }
@@ -55,26 +55,26 @@ public sealed class ValidatorTests
     [InlineData("ESP")]    // alfa-3, no alfa-2
     [InlineData("12")]     // no son letras
     [InlineData("ZZ")]     // 2 letras, pero no es un país
-    public void CollaboratorValidator_ShouldFail_WhenCountryCodeIsNotAnIsoAlpha2Country(string country)
+    public void EmployeeValidator_ShouldFail_WhenCountryCodeIsNotAnIsoAlpha2Country(string country)
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", "ana@turnosync.dev", country));
+        var result = _employeeValidator.Validate(new EmployeeRequest("Ana", "ana@turnosync.dev", country));
 
         Assert.Equal(["CountryCode"], FailedProperties(result));
     }
 
     [Fact]
-    public void CollaboratorValidator_ShouldFail_WhenNameIsTooLong()
+    public void EmployeeValidator_ShouldFail_WhenNameIsTooLong()
     {
-        var result = _collaboratorValidator.Validate(
-            new CollaboratorRequest(new string('a', 201), "ana@turnosync.dev", "ES"));
+        var result = _employeeValidator.Validate(
+            new EmployeeRequest(new string('a', 201), "ana@turnosync.dev", "ES"));
 
         Assert.Equal(["Name"], FailedProperties(result));
     }
 
     [Fact]
-    public void CollaboratorValidator_ShouldReportSpanishMessages_WhenRequiredFieldsAreMissing()
+    public void EmployeeValidator_ShouldReportSpanishMessages_WhenRequiredFieldsAreMissing()
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest(null, null, null));
+        var result = _employeeValidator.Validate(new EmployeeRequest(null, null, null));
 
         Assert.Equal(
             ["El nombre es obligatorio.", "El email es obligatorio.", "El país es obligatorio."],
@@ -84,18 +84,18 @@ public sealed class ValidatorTests
     [Theory]
     [InlineData("not-an-email", "El email no es válido.")]
     [InlineData("@turnosync.dev", "El email no es válido.")]
-    public void CollaboratorValidator_ShouldReportSpanishMessage_WhenEmailIsInvalid(string email, string message)
+    public void EmployeeValidator_ShouldReportSpanishMessage_WhenEmailIsInvalid(string email, string message)
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", email, "ES"));
+        var result = _employeeValidator.Validate(new EmployeeRequest("Ana", email, "ES"));
 
         Assert.Equal([message], result.Errors.Select(e => e.ErrorMessage));
     }
 
     [Fact]
-    public void CollaboratorValidator_ShouldReportSpanishMessagesWithTheLimit_WhenTextsAreTooLong()
+    public void EmployeeValidator_ShouldReportSpanishMessagesWithTheLimit_WhenTextsAreTooLong()
     {
-        var result = _collaboratorValidator.Validate(
-            new CollaboratorRequest(new string('a', 201), new string('a', 250) + "@x.com", "ES"));
+        var result = _employeeValidator.Validate(
+            new EmployeeRequest(new string('a', 201), new string('a', 250) + "@x.com", "ES"));
 
         Assert.Equal(
             ["El nombre no puede superar los 200 caracteres.", "El email no puede superar los 254 caracteres."],
@@ -105,9 +105,9 @@ public sealed class ValidatorTests
     [Theory]
     [InlineData("ESP", "El código de país debe tener 2 letras.")]
     [InlineData("ZZ", "El código de país debe ser un código ISO 3166-1 alfa-2 válido (por ejemplo, ES).")]
-    public void CollaboratorValidator_ShouldReportSpanishMessage_WhenCountryCodeIsInvalid(string country, string message)
+    public void EmployeeValidator_ShouldReportSpanishMessage_WhenCountryCodeIsInvalid(string country, string message)
     {
-        var result = _collaboratorValidator.Validate(new CollaboratorRequest("Ana", "ana@turnosync.dev", country));
+        var result = _employeeValidator.Validate(new EmployeeRequest("Ana", "ana@turnosync.dev", country));
 
         Assert.Equal([message], result.Errors.Select(e => e.ErrorMessage));
     }
@@ -130,7 +130,7 @@ public sealed class ValidatorTests
     {
         var result = _shiftValidator.Validate(new ShiftRequest(null, null, null, null));
 
-        Assert.Equal(["CollaboratorId", "Date", "EndTime", "StartTime"], FailedProperties(result));
+        Assert.Equal(["Date", "EmployeeId", "EndTime", "StartTime"], FailedProperties(result));
     }
 
     [Fact]
@@ -171,11 +171,11 @@ public sealed class ValidatorTests
     [Theory]
     [InlineData(0)]
     [InlineData(-3)]
-    public void ShiftValidator_ShouldFail_WhenCollaboratorIdIsNotPositive(int id)
+    public void ShiftValidator_ShouldFail_WhenEmployeeIdIsNotPositive(int id)
     {
-        var result = _shiftValidator.Validate(ValidShift() with { CollaboratorId = id });
+        var result = _shiftValidator.Validate(ValidShift() with { EmployeeId = id });
 
-        Assert.Equal(["CollaboratorId"], FailedProperties(result));
+        Assert.Equal(["EmployeeId"], FailedProperties(result));
         Assert.Equal(
             ["El identificador del colaborador debe ser mayor que 0."],
             result.Errors.Select(e => e.ErrorMessage));

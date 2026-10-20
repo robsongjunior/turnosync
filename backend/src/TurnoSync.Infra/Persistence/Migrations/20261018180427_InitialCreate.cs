@@ -35,7 +35,7 @@ namespace TurnoSync.Infra.Persistence.Migrations
                 {
                     id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    collaborator_id = table.Column<int>(type: "INTEGER", nullable: false),
+                    employee_id = table.Column<int>(type: "INTEGER", nullable: false),
                     date = table.Column<DateOnly>(type: "TEXT", nullable: false),
                     start_time = table.Column<TimeOnly>(type: "TEXT", nullable: false),
                     end_time = table.Column<TimeOnly>(type: "TEXT", nullable: false),
@@ -47,8 +47,8 @@ namespace TurnoSync.Infra.Persistence.Migrations
                 {
                     table.PrimaryKey("pk_shifts", x => x.id);
                     table.ForeignKey(
-                        name: "fk_shifts_collaborators_collaborator_id",
-                        column: x => x.collaborator_id,
+                        name: "fk_shifts_employees_employee_id",
+                        column: x => x.employee_id,
                         principalTable: "employees",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
@@ -74,9 +74,9 @@ namespace TurnoSync.Infra.Persistence.Migrations
                 filter: "is_deleted = 0");
 
             migrationBuilder.CreateIndex(
-                name: "ix_shifts_collaborator_id_date",
+                name: "ix_shifts_employee_id_date",
                 table: "shifts",
-                columns: new[] { "collaborator_id", "date" });
+                columns: new[] { "employee_id", "date" });
         }
 
         /// <inheritdoc />
