@@ -1,12 +1,13 @@
 using TurnoSync.Application.Employees;
 using TurnoSync.Application.Shifts;
+using TurnoSync.Tests.Support;
 
 namespace TurnoSync.Tests.Application;
 
 public sealed class ValidatorTests
 {
     private readonly EmployeeRequestValidator _employeeValidator = new();
-    private readonly ShiftRequestValidator _shiftValidator = new();
+    private readonly ShiftRequestValidator _shiftValidator = new(new FixedTimeProvider());
 
     private static ShiftRequest ValidShift() => new(1, new DateOnly(2026, 10, 12), new TimeOnly(8, 0), new TimeOnly(16, 0));
 
@@ -124,6 +125,37 @@ public sealed class ValidatorTests
     public void ShiftValidator_ShouldPass_WhenShiftCrossesMidnight() =>
         Assert.True(_shiftValidator.Validate(
             ValidShift() with { StartTime = new TimeOnly(22, 0), EndTime = new TimeOnly(6, 0) }).IsValid);
+
+    // El reloj de las pruebas marca el 1/10/2026 a las 08:00 en Madrid.
+    [Theory]
+    [InlineData(2026, 9, 30, 22, 0)] // día anterior
+    [InlineData(2026, 10, 1, 7, 59)] // hoy, hora ya pasada
+    public void ShiftValidator_ShouldFail_WhenShiftStartsInThePast(int year, int month, int day, int hour, int minute)
+    {
+        var result = _shiftValidator.Validate(new ShiftRequest(
+            1, new DateOnly(year, month, day), new TimeOnly(hour, minute), new TimeOnly(hour, minute).AddHours(8)));
+
+        Assert.Equal(["No se puede registrar un turno en el pasado."], result.Errors.Select(e => e.ErrorMessage));
+        Assert.Equal(["Date"], FailedProperties(result));
+    }
+
+    [Theory]
+    [InlineData(8, 0)] // empieza justo ahora
+    [InlineData(9, 0)] // hoy, más tarde
+    public void ShiftValidator_ShouldPass_WhenShiftStartsTodayFromNowOn(int hour, int minute) =>
+        Assert.True(_shiftValidator.Validate(new ShiftRequest(
+            1, new DateOnly(2026, 10, 1), new TimeOnly(hour, minute), new TimeOnly(hour, minute).AddHours(8))).IsValid);
+
+    [Fact]
+    public void ShiftValidator_ShouldCompareWithMadridTime_NotUtc()
+    {
+        // 06:30 UTC son las 08:30 en Madrid (horario de verano): un turno a las 08:00 ya es pasado.
+        var validator = new ShiftRequestValidator(new FixedTimeProvider(new DateTimeOffset(2026, 10, 1, 6, 30, 0, TimeSpan.Zero)));
+
+        var result = validator.Validate(ValidShift() with { Date = new DateOnly(2026, 10, 1), StartTime = new TimeOnly(8, 0) });
+
+        Assert.False(result.IsValid);
+    }
 
     [Fact]
     public void ShiftValidator_ShouldFailEveryField_WhenRequestIsEmpty()

@@ -192,6 +192,7 @@ usa el mismo formato (con celdas nativas de fecha y hora), así que **se puede v
 | ¿Cómo se identifica al colaborador en el Excel? | Por su email, que por tanto es **único** entre los colaboradores no borrados (se compara sin distinguir mayúsculas). |
 | ¿Formato del país? | Código ISO 3166-1 alfa-2 (`ES`, `BR`…), que es el que usa Nager.Date. Se normaliza a mayúsculas y se valida. |
 | ¿Zonas horarias? | Las horas son locales al país del colaborador y no se convierten; el horario de verano se ignora. |
+| ¿Se pueden registrar turnos pasados? | **No.** Crear, editar o importar un turno cuyo inicio (fecha + hora de inicio) ya pasó devuelve 400 en `date`. "Ahora" es la hora de Madrid (`Europe/Madrid`): no hay un mapa fiable país → zona horaria (BR o MX tienen varias), así que en América un turno puede rechazarse unas horas antes de empezar en hora local. |
 | ¿Qué fecha cuenta para el festivo? | La de inicio del turno (un turno nocturno que empieza la víspera de un festivo no se marca). |
 | ¿Qué festivos? | Solo los nacionales (`global: true`), porque el colaborador no tiene región. |
 | ¿Qué fecha filtra la exportación? | La fecha de inicio del turno (`date`), con `from` y `to` obligatorios e inclusivos; `from > to` devuelve 400. El listado usa el mismo criterio, con las fechas opcionales. |

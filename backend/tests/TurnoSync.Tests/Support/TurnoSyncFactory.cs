@@ -21,12 +21,19 @@ public sealed class TurnoSyncFactory : WebApplicationFactory<Program>
     /// <summary>Devuelve "sin festivos" por defecto; cada prueba configura lo que necesite.</summary>
     public FakeHolidayProvider Holidays { get; } = new();
 
+    /// <summary>Hora actual de la API; las fechas de turno de las pruebas son posteriores.</summary>
+    public FixedTimeProvider Clock { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(
             new Dictionary<string, string?> { ["ConnectionStrings:TurnoSync"] = _connectionString }));
 
-        builder.ConfigureTestServices(services => services.AddSingleton<IHolidayProvider>(Holidays));
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IHolidayProvider>(Holidays);
+            services.AddSingleton<TimeProvider>(Clock);
+        });
     }
 }
 

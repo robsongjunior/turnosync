@@ -26,7 +26,7 @@ public sealed class ShiftImportServiceTests : IDisposable
             new ClosedXmlShiftSpreadsheet(),
             new EmployeeRepository(context),
             new ShiftRepository(context),
-            new ShiftRequestValidator());
+            new ShiftRequestValidator(new FixedTimeProvider()));
 
         using var stream = SheetBuilder.AsStream(file);
         return await service.ImportAsync(fileName, stream);
@@ -119,6 +119,17 @@ public sealed class ShiftImportServiceTests : IDisposable
                 "La hora de fin debe ser distinta de la hora de inicio.",
             ],
             failed.Reasons);
+    }
+
+    [Fact]
+    public async Task Import_ShouldRejectRowsInThePast()
+    {
+        var report = await ImportOkAsync(SheetBuilder.Standard(
+            ["ana@turnosync.dev", "2026-09-30", "08:00", "16:00"],
+            ["ana@turnosync.dev", "2026-10-13", "08:00", "16:00"]));
+
+        Assert.Equal([3], report.Imported.Select(i => i.Row));
+        Assert.Equal(["No se puede registrar un turno en el pasado."], Assert.Single(report.Failed).Reasons);
     }
 
     [Fact]

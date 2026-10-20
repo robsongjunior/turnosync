@@ -144,6 +144,16 @@ public sealed class ShiftsApiTests : IDisposable
         Assert.Equal(["date", "employeeId", "endTime", "startTime"], problem!.Errors.Keys.Order());
     }
 
+    [Fact]
+    public async Task Create_ShouldReturn400_WhenShiftIsInThePast()
+    {
+        var response = await PostShiftAsync(1, "2026-09-30", "08:00", "16:00");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.Equal(["No se puede registrar un turno en el pasado."], problem!.Errors["date"]);
+    }
+
     [Theory]
     [InlineData("8am")]
     [InlineData("25:00")]
