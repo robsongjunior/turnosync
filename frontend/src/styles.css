@@ -63,6 +63,11 @@ button.primary {
   color: #fff;
 }
 
+button.danger {
+  border-color: var(--error-fg);
+  color: var(--error-fg);
+}
+
 button.link {
   border: 0;
   background: none;

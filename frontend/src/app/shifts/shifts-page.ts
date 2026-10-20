@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { EmployeeForm } from '../employees/employee-form';
+import { EmployeesPanel } from '../employees/employees-panel';
 import { EmployeesApi } from '../core/employees-api';
 import { describeError } from '../core/errors';
 import { Employee, ImportReport, Shift, ShiftFilter } from '../core/models';
@@ -9,7 +10,7 @@ import { ShiftForm } from './shift-form';
 
 @Component({
   selector: 'app-shifts-page',
-  imports: [ShiftForm, EmployeeForm, ImportReportPanel],
+  imports: [ShiftForm, EmployeeForm, EmployeesPanel, ImportReportPanel],
   templateUrl: './shifts-page.html',
 })
 export class ShiftsPage implements OnInit {
@@ -24,6 +25,7 @@ export class ShiftsPage implements OnInit {
   /** El turno que se está editando; null = el formulario (si está abierto) crea uno nuevo. */
   protected readonly editing = signal<Shift | null>(null);
   protected readonly employeeFormOpen = signal(false);
+  protected readonly employeesPanelOpen = signal(false);
   protected readonly importReport = signal<ImportReport | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(false);
@@ -137,6 +139,18 @@ export class ShiftsPage implements OnInit {
     this.employeeFormOpen.set(false);
     this.error.set(null);
     await this.load(); // el nuevo colaborador aparece ya en el selector del formulario de turnos
+  }
+
+  protected async onEmployeeDeleted(id: number): Promise<void> {
+    this.error.set(null);
+    // Sus turnos ya no existen: no se puede seguir filtrando por él ni editando uno de ellos.
+    if (this.filter().employeeId === id) {
+      this.filter.update((current) => ({ ...current, employeeId: null }));
+    }
+    if (this.editing()?.employeeId === id) {
+      this.closeForm();
+    }
+    await this.load();
   }
 
   protected async onFileSelected(event: Event): Promise<void> {

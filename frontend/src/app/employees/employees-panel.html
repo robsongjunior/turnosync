@@ -1,0 +1,39 @@
+<section class="panel" aria-label="Colaboradores">
+  <div class="panel-header">
+    <h2>Colaboradores</h2>
+    <button type="button" (click)="closed.emit()">Cerrar</button>
+  </div>
+
+  @if (error(); as message) {
+    <p class="banner banner-error" role="alert">{{ message }}</p>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>País</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (employee of employees(); track employee.id) {
+        <tr>
+          <td>{{ employee.name }}</td>
+          <td>{{ employee.email }}</td>
+          <td>{{ employee.countryCode }}</td>
+          <td>
+            <button type="button" class="danger" (click)="remove(employee)" [disabled]="deleting() !== null">
+              {{ deleting() === employee.id ? 'Eliminando…' : 'Eliminar' }}
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4" class="empty">Todavía no hay colaboradores.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

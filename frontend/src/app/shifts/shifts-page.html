@@ -13,6 +13,7 @@
   <div class="toolbar">
     <button type="button" class="primary" (click)="newShift()">+ Nuevo turno</button>
     <button type="button" class="primary" (click)="employeeFormOpen.set(true)">+ Nuevo colaborador</button>
+    <button type="button" (click)="employeesPanelOpen.set(!employeesPanelOpen())">Colaboradores</button>
     <button type="button" (click)="fileInput.click()" [disabled]="busy()">Importar</button>
     <input #fileInput type="file" accept=".xlsx" hidden (change)="onFileSelected($event)" />
 
@@ -73,6 +74,14 @@
 
   @if (employeeFormOpen()) {
     <app-employee-form (saved)="onEmployeeSaved()" (cancelled)="employeeFormOpen.set(false)" />
+  }
+
+  @if (employeesPanelOpen()) {
+    <app-employees-panel
+      [employees]="employees()"
+      (deleted)="onEmployeeDeleted($event)"
+      (closed)="employeesPanelOpen.set(false)"
+    />
   }
 
   @if (formOpen()) {

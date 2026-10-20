@@ -15,4 +15,9 @@ export class EmployeesApi {
   create(body: EmployeeRequest): Promise<Employee> {
     return firstValueFrom(this.http.post<Employee>('/api/employees', body));
   }
+
+  /** Borrado lógico: la API borra también los turnos del colaborador. */
+  delete(id: number): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`/api/employees/${id}`));
+  }
 }
