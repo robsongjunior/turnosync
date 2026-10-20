@@ -23,6 +23,18 @@ La API sirve el build de Angular desde `wwwroot`, así que frontend y API compar
 Al arrancar se aplican las migraciones y se cargan 5 colaboradores de ejemplo (ES, BR, AR, MX, PT).
 Los datos se guardan en el volumen `turnosync-data` y se conservan entre ejecuciones; `docker-compose down -v` los borra.
 
+#### Consultar la base de datos
+
+Para analizar las tablas con un cliente SQLite (DB Browser for SQLite, DBeaver…), copia el archivo de la base desde el
+contenedor a tu equipo. La carpeta de destino (`C:\turnosync` en el ejemplo) debe existir antes:
+
+```bash
+docker cp turnosync-app-1:/data/turnosync.db C:\turnosync\turnosync.db
+```
+
+La base usa modo WAL: los cambios más recientes pueden estar todavía en `turnosync.db-wal`. Para verlos, copia también
+`turnosync.db-wal` y `turnosync.db-shm` a la misma carpeta. La copia es una foto del momento; para ver datos nuevos hay que repetirla.
+
 ### En local (sin Docker)
 
 Requisitos: SDK de .NET 9 y Node 22.
